@@ -7,14 +7,21 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.Priority?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.TilePane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
 
 <BorderPane fx:id="root"
             xmlns="http://javafx.com/javafx/21"
@@ -22,152 +29,311 @@
             fx:controller="com.drawingapp.controller.DrawingController"
             styleClass="root-layout">
     <top>
-        <HBox fx:id="headerBar" alignment="CENTER_LEFT" spacing="18" styleClass="surface-card header-bar">
-            <VBox spacing="4">
-                <Label text="Drawing Studio" styleClass="app-title"/>
-                <Label text="Dessinez rapidement avec une interface plus claire et un vrai historique." styleClass="app-subtitle"/>
-            </VBox>
-            <Region HBox.hgrow="ALWAYS"/>
-            <HBox spacing="10" styleClass="header-actions">
-                <Button fx:id="quickOpenBtn" text="Ouvrir un fichier" styleClass="secondary-button header-action-button"/>
+        <HBox fx:id="headerBar" alignment="CENTER_LEFT" spacing="14" styleClass="top-toolbar">
+            <HBox alignment="CENTER_LEFT" spacing="14" styleClass="brand-block">
+                <StackPane styleClass="brand-logo-wrap">
+                    <Region styleClass="brand-logo-icon"/>
+                </StackPane>
+                <Label text="DrawingApp" styleClass="brand-title"/>
             </HBox>
-            <Label fx:id="activeToolBadge" text="Mode selection" styleClass="tool-badge"/>
-            <HBox spacing="8" styleClass="window-controls">
-                <Button fx:id="minimizeBtn" text="-" styleClass="window-control-button"/>
-                <Button fx:id="maximizeBtn" text="[ ]" styleClass="window-control-button"/>
-                <Button fx:id="closeBtn" text="X" styleClass="close-window-button"/>
+
+            <HBox alignment="CENTER_LEFT" spacing="8" styleClass="toolbar-cluster">
+                <Button fx:id="openBtn" text="Open" styleClass="toolbar-button">
+                    <graphic><SVGPath styleClass="icon-svg toolbar-svg" content="M3 6.5A1.5 1.5 0 014.5 5h3.3a1.5 1.5 0 011.06.44l.74.81H15.5A1.5 1.5 0 0117 7.75v7.75A1.5 1.5 0 0115.5 17h-11A1.5 1.5 0 013 15.5v-9zM4.5 6a.5.5 0 00-.5.5v9a.5.5 0 00.5.5h11a.5.5 0 00.5-.5V7.75a.5.5 0 00-.5-.5H9.15l-1.2-1.25H4.5z"/></graphic>
+                    <tooltip><Tooltip text="Open drawing"/></tooltip>
+                </Button>
+                <Button fx:id="saveBtn" text="Save" styleClass="toolbar-button">
+                    <graphic><SVGPath styleClass="icon-svg toolbar-svg" content="M4.75 3h8.94l3.31 3.31V16.5A1.5 1.5 0 0115.5 18h-11A1.5 1.5 0 013 16.5v-12A1.5 1.5 0 014.5 3h.25zm.25 1a.5.5 0 00-.5.5v12a.5.5 0 00.5.5h1.5V11h8v6h1a.5.5 0 00.5-.5V6.73L13.27 4H13v4H6V4H5zm2 0v3h5V4H7zm1 8v5h5v-5H8z"/></graphic>
+                    <tooltip><Tooltip text="Save drawing"/></tooltip>
+                </Button>
+            </HBox>
+
+            <Separator orientation="VERTICAL" styleClass="toolbar-separator"/>
+
+            <HBox alignment="CENTER_LEFT" spacing="8" styleClass="toolbar-cluster">
+                <Button fx:id="undoBtn" text="Undo" styleClass="toolbar-button">
+                    <graphic><SVGPath styleClass="icon-svg toolbar-svg" content="M8.8 4.2L4.2 8.8l4.6 4.6 1.2-1.2-2.5-2.5H12c2.2 0 3.8 1.6 3.8 3.7 0 2.1-1.6 3.7-3.8 3.7h-2.2v1.8H12c3.2 0 5.6-2.3 5.6-5.5S15.2 7.9 12 7.9H7.5l2.5-2.5-1.2-1.2z"/></graphic>
+                    <tooltip><Tooltip text="Undo last action"/></tooltip>
+                </Button>
+                <Button fx:id="redoBtn" text="Redo" styleClass="toolbar-button">
+                    <graphic><SVGPath styleClass="icon-svg toolbar-svg" content="M11.2 4.2l-1.2 1.2 2.5 2.5H8c-3.2 0-5.6 2.3-5.6 5.5S4.8 19 8 19h2.2v-1.8H8c-2.2 0-3.8-1.6-3.8-3.7 0-2.1 1.6-3.7 3.8-3.7h4.5L10 12.3l1.2 1.2 4.6-4.6-4.6-4.7z"/></graphic>
+                    <tooltip><Tooltip text="Redo last action"/></tooltip>
+                </Button>
+            </HBox>
+
+            <Separator orientation="VERTICAL" styleClass="toolbar-separator"/>
+
+            <Button fx:id="deleteBtn" text="Delete" styleClass="toolbar-button danger-button">
+                <graphic><SVGPath styleClass="icon-svg toolbar-svg" content="M7 4V2h6v2h4v2H3V4h4zm-1 4h2v8H6V8zm5 0h2v8h-2V8zM4 8h1v8.5A1.5 1.5 0 006.5 18h7a1.5 1.5 0 001.5-1.5V8h1v8.5A2.5 2.5 0 0113.5 19h-7A2.5 2.5 0 014 16.5V8z"/></graphic>
+                <tooltip><Tooltip text="Delete selected object"/></tooltip>
+            </Button>
+
+            <Button fx:id="quickOpenBtn" text="Open" visible="false" managed="false"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <HBox alignment="CENTER_LEFT" spacing="0" styleClass="select-split-wrap">
+                <ToggleButton fx:id="selectBtn" text="Select" styleClass="select-main-button">
+                    <graphic><SVGPath styleClass="icon-svg select-svg" content="M4.2 3.2l8.8 6.4-3.8.5 1.8 3.6-1.5.8-1.8-3.6-3.1 2.4V3.2z"/></graphic>
+                    <tooltip><Tooltip text="Switch to selection mode"/></tooltip>
+                </ToggleButton>
+                <Button text="⌄" focusTraversable="false" styleClass="select-arrow-button">
+                    <tooltip><Tooltip text="Selection options"/></tooltip>
+                </Button>
+            </HBox>
+
+            <HBox alignment="CENTER_RIGHT" spacing="6" styleClass="window-controls">
+                <Button fx:id="minimizeBtn" text="−" styleClass="window-control-button">
+                    <tooltip><Tooltip text="Minimize"/></tooltip>
+                </Button>
+                <Button fx:id="maximizeBtn" text="□" styleClass="window-control-button">
+                    <tooltip><Tooltip text="Maximize"/></tooltip>
+                </Button>
+                <Button fx:id="closeBtn" text="✕" styleClass="window-control-button close-window-button">
+                    <tooltip><Tooltip text="Close"/></tooltip>
+                </Button>
             </HBox>
         </HBox>
     </top>
 
     <left>
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="panel-scroll">
-            <content>
-                <VBox prefWidth="336" minWidth="336" spacing="18" styleClass="surface-card side-panel">
-                    <VBox spacing="12" styleClass="section-card">
-                        <Label text="Outils de dessin" styleClass="section-title"/>
-                        <Label text="Choisissez un mode puis dessinez directement dans le canevas." styleClass="section-caption"/>
-                        <Button fx:id="selectBtn" text="Selection" maxWidth="Infinity" styleClass="tool-button"/>
-                        <Label text="Formes geometriques" styleClass="field-label"/>
-                        <TilePane prefColumns="2" hgap="10" vgap="10" styleClass="shape-grid">
-                            <Button fx:id="rectangleBtn" text="Rectangle" styleClass="tool-button compact-tool-button"/>
-                            <Button fx:id="circleBtn" text="Cercle" styleClass="tool-button compact-tool-button"/>
-                            <Button fx:id="lineBtn" text="Ligne" styleClass="tool-button compact-tool-button"/>
-                            <Button fx:id="triangleBtn" text="Triangle" styleClass="tool-button compact-tool-button"/>
-                            <Button fx:id="diamondBtn" text="Losange" styleClass="tool-button compact-tool-button"/>
-                            <Button fx:id="pentagonBtn" text="Pentagone" styleClass="tool-button compact-tool-button"/>
-                            <Button fx:id="hexagonBtn" text="Hexagone" styleClass="tool-button compact-tool-button"/>
-                            <Button fx:id="starBtn" text="Etoile" styleClass="tool-button compact-tool-button"/>
-                        </TilePane>
-                    </VBox>
+        <VBox prefWidth="280" minWidth="240" spacing="18" styleClass="left-sidebar">
+            <VBox spacing="10">
+                <Label text="TOOLS" styleClass="sidebar-section-title"/>
+                <ToggleButton fx:id="sidebarSelectBtn" text="Select / Move" maxWidth="Infinity" styleClass="sidebar-tool-button">
+                    <graphic><Region styleClass="icon-select"/></graphic>
+                </ToggleButton>
+            </VBox>
 
-                    <VBox spacing="12" styleClass="section-card">
-                        <Label text="Couleurs" styleClass="section-title"/>
-                        <Label text="Appliquez une couleur aux formes geometriques et aux nouveaux elements du graphe." styleClass="section-caption"/>
-                        <HBox alignment="CENTER_LEFT" spacing="10">
-                            <Pane fx:id="activeColorPreview" prefHeight="22" prefWidth="22" styleClass="active-color-preview"/>
-                            <Label fx:id="activeColorValueLabel" text="Couleur active #2D7FF9" styleClass="field-label"/>
-                            <Region HBox.hgrow="ALWAYS"/>
-                            <ColorPicker fx:id="customColorPicker" styleClass="custom-color-picker"/>
+            <VBox spacing="10">
+                <Label text="SHAPES" styleClass="sidebar-section-title"/>
+                <GridPane hgap="8" vgap="8" styleClass="shape-grid">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="33.33"/>
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="33.33"/>
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="33.33"/>
+                    </columnConstraints>
+                    
+                    <ToggleButton fx:id="rectangleBtn" text="Rectangle" styleClass="shape-toggle" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                        <graphic><Region styleClass="icon-rectangle"/></graphic>
+                    </ToggleButton>
+                    <ToggleButton fx:id="circleBtn" text="Circle" styleClass="shape-toggle" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                        <graphic><Region styleClass="icon-circle"/></graphic>
+                    </ToggleButton>
+                    <ToggleButton fx:id="lineBtn" text="Line" styleClass="shape-toggle" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                        <graphic><Region styleClass="icon-line"/></graphic>
+                    </ToggleButton>
+                    
+                    <ToggleButton fx:id="triangleBtn" text="Triangle" styleClass="shape-toggle" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                        <graphic><Region styleClass="icon-triangle"/></graphic>
+                    </ToggleButton>
+                    <ToggleButton fx:id="diamondBtn" text="Diamond" styleClass="shape-toggle" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                        <graphic><Region styleClass="icon-diamond"/></graphic>
+                    </ToggleButton>
+                    <ToggleButton fx:id="pentagonBtn" text="Pentagon" styleClass="shape-toggle" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                        <graphic><Region styleClass="icon-pentagon"/></graphic>
+                    </ToggleButton>
+                    
+                    <ToggleButton fx:id="hexagonBtn" text="Hexagon" styleClass="shape-toggle" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                        <graphic><Region styleClass="icon-hexagon"/></graphic>
+                    </ToggleButton>
+                    <ToggleButton fx:id="starBtn" text="Star" styleClass="shape-toggle" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                        <graphic><Region styleClass="icon-star"/></graphic>
+                    </ToggleButton>
+                </GridPane>
+            </VBox>
+
+            <VBox spacing="12">
+                <Label text="COLORS" styleClass="sidebar-section-title"/>
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="Stroke" styleClass="field-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <StackPane alignment="CENTER_RIGHT" styleClass="stroke-picker-stack">
+                        <HBox alignment="CENTER_LEFT" spacing="8" styleClass="stroke-picker-visual">
+                            <Pane fx:id="activeColorPreview" prefHeight="14" prefWidth="24" styleClass="stroke-color-swatch"/>
+                            <Label fx:id="activeColorValueLabel" text="#2563EB" styleClass="stroke-color-text"/>
+                            <Region styleClass="stroke-picker-arrow"/>
                         </HBox>
-                        <TilePane prefColumns="4" hgap="10" vgap="10" styleClass="color-grid">
-                            <Button fx:id="colorBlueBtn" styleClass="color-swatch"/>
-                            <Button fx:id="colorTealBtn" styleClass="color-swatch"/>
-                            <Button fx:id="colorGreenBtn" styleClass="color-swatch"/>
-                            <Button fx:id="colorYellowBtn" styleClass="color-swatch"/>
-                            <Button fx:id="colorOrangeBtn" styleClass="color-swatch"/>
-                            <Button fx:id="colorRedBtn" styleClass="color-swatch"/>
-                            <Button fx:id="colorPurpleBtn" styleClass="color-swatch"/>
-                            <Button fx:id="colorGrayBtn" styleClass="color-swatch"/>
-                        </TilePane>
-                    </VBox>
-
-                    <VBox spacing="12" styleClass="section-card">
-                        <Label text="Construction du graphe" styleClass="section-title"/>
-                        <Label text="Ajoutez des noeuds puis reliez-les avec des aretes ponderees." styleClass="section-caption"/>
-                        <Button fx:id="graphNodeBtn" text="Ajouter un noeud" maxWidth="Infinity" styleClass="tool-button"/>
-                        <Button fx:id="graphEdgeBtn" text="Ajouter une arete" maxWidth="Infinity" styleClass="tool-button"/>
-                        <Label fx:id="graphSummaryLabel" text="0 noeuds | 0 aretes" styleClass="info-chip"/>
-                    </VBox>
-
-                    <VBox spacing="12" styleClass="section-card">
-                        <Label text="Plus court chemin" styleClass="section-title"/>
-                        <Label text="Choisissez deux noeuds et un algorithme pour lancer le calcul." styleClass="section-caption"/>
-                        <Label text="Depart" styleClass="field-label"/>
-                        <ComboBox fx:id="startNodeCombo" maxWidth="Infinity" styleClass="combo-box-modern"/>
-                        <Label text="Arrivee" styleClass="field-label"/>
-                        <ComboBox fx:id="endNodeCombo" maxWidth="Infinity" styleClass="combo-box-modern"/>
-                        <Label text="Algorithme" styleClass="field-label"/>
-                        <ComboBox fx:id="algorithmCombo" maxWidth="Infinity" styleClass="combo-box-modern"/>
-                        <Button fx:id="computePathBtn" text="Calculer le chemin" maxWidth="Infinity" styleClass="primary-button"/>
-                        <Button fx:id="clearPathBtn" text="Effacer la mise en evidence" maxWidth="Infinity" styleClass="secondary-button"/>
-                        <Label fx:id="pathResultLabel" text="Selectionnez deux noeuds puis choisissez un algorithme pour calculer le plus court chemin." wrapText="true" styleClass="result-card"/>
-                    </VBox>
-
-                    <VBox spacing="12" styleClass="section-card">
-                        <Label text="Actions" styleClass="section-title"/>
-                        <Label text="Corrigez rapidement votre dessin sans quitter votre zone de travail." styleClass="section-caption"/>
-                        <HBox spacing="10">
-                            <Button fx:id="undoBtn" text="Annuler" maxWidth="Infinity" styleClass="action-button action-button-compact" HBox.hgrow="ALWAYS"/>
-                            <Button fx:id="clearBtn" text="Effacer" maxWidth="Infinity" styleClass="action-button action-button-compact" HBox.hgrow="ALWAYS"/>
-                            <Button fx:id="redoBtn" text="Retablir" maxWidth="Infinity" styleClass="action-button action-button-compact" HBox.hgrow="ALWAYS"/>
-                        </HBox>
-                        <Button fx:id="deleteBtn" text="Supprimer la selection" maxWidth="Infinity" styleClass="danger-button"/>
-                    </VBox>
-
-                    <VBox spacing="12" styleClass="section-card">
-                        <Label text="Journalisation" styleClass="section-title"/>
-                        <Label text="Selectionnez ou stocker les evenements de la session." styleClass="section-caption"/>
-                        <ComboBox fx:id="logStrategyCombo" maxWidth="Infinity" prefWidth="220" styleClass="combo-box-modern"/>
-                    </VBox>
-
-                    <VBox spacing="12" styleClass="section-card">
-                        <Label text="Fichiers" styleClass="section-title"/>
-                        <Label text="Enregistrez puis rouvrez vos dessins complets au format .drawing." styleClass="section-caption"/>
-                        <Button fx:id="saveBtn" text="Sauvegarder" maxWidth="Infinity" styleClass="primary-button"/>
-                        <Button fx:id="openBtn" text="Ouvrir un fichier .drawing" maxWidth="Infinity" styleClass="secondary-button"/>
-                    </VBox>
+                        <ColorPicker fx:id="customColorPicker" styleClass="stroke-color-picker-overlay"/>
+                    </StackPane>
+                </HBox>
+                
+                <VBox spacing="10">
+                    <HBox spacing="8" alignment="CENTER_LEFT">
+                        <Button fx:id="colorBlueBtn" styleClass="color-swatch"/>
+                        <Button fx:id="colorTealBtn" styleClass="color-swatch"/>
+                        <Button fx:id="colorGreenBtn" styleClass="color-swatch"/>
+                        <Button fx:id="colorYellowBtn" styleClass="color-swatch"/>
+                        <Button fx:id="colorOrangeBtn" styleClass="color-swatch"/>
+                        <Button fx:id="colorRedBtn" styleClass="color-swatch"/>
+                        <Button fx:id="colorPurpleBtn" styleClass="color-swatch"/>
+                    </HBox>
+                    <HBox spacing="8" alignment="CENTER_LEFT">
+                        <Button fx:id="colorGrayBtn" styleClass="color-swatch"/>
+                    </HBox>
                 </VBox>
-            </content>
-        </ScrollPane>
+            </VBox>
+
+            <VBox spacing="10">
+                <Label text="EDIT" styleClass="sidebar-section-title"/>
+                <HBox spacing="10">
+                    <Button fx:id="deleteActionBtn" text="Delete" maxWidth="Infinity" styleClass="delete-button" HBox.hgrow="ALWAYS">
+                        <graphic><Region styleClass="icon-delete"/></graphic>
+                    </Button>
+                    <Button fx:id="clearBtn" text="Clear" maxWidth="Infinity" styleClass="clear-button" HBox.hgrow="ALWAYS">
+                        <graphic><Region styleClass="icon-clear"/></graphic>
+                    </Button>
+                </HBox>
+            </VBox>
+
+            <VBox spacing="10">
+                <Label text="GRAPH TOOLS" styleClass="sidebar-section-title"/>
+                <HBox spacing="10">
+                    <Button fx:id="graphNodeBtn" text="Add Node" maxWidth="Infinity" styleClass="add-node-button" HBox.hgrow="ALWAYS">
+                        <graphic><Region styleClass="icon-graph-node"/></graphic>
+                    </Button>
+                    <Button fx:id="graphEdgeBtn" text="Add Edge" maxWidth="Infinity" styleClass="add-edge-button" HBox.hgrow="ALWAYS">
+                        <graphic><Region styleClass="icon-graph-edge"/></graphic>
+                    </Button>
+                </HBox>
+            </VBox>
+        </VBox>
+        <BorderPane.margin>
+            <Insets top="12" right="12" bottom="12" left="0"/>
+        </BorderPane.margin>
     </left>
 
     <center>
-        <VBox spacing="12" styleClass="surface-card canvas-panel">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="Canevas" styleClass="section-title"/>
+        <VBox spacing="10" styleClass="workspace-card">
+            <HBox alignment="CENTER_LEFT" styleClass="workspace-header">
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Region styleClass="canvas-title-icon icon-refresh-arc"/>
+                    <Label text="Canvas" styleClass="workspace-title"/>
+                </HBox>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Label text="Zone de travail" styleClass="canvas-chip"/>
+                <HBox alignment="CENTER_LEFT" spacing="8" styleClass="zoom-toolbar">
+                    <Button text="−" focusTraversable="false" styleClass="canvas-icon-button">
+                        <tooltip><Tooltip text="Zoom out"/></tooltip>
+                    </Button>
+                    <Label fx:id="zoomStatusLabel" text="100%" styleClass="zoom-label"/>
+                    <Button text="+" focusTraversable="false" styleClass="canvas-icon-button">
+                        <tooltip><Tooltip text="Zoom in"/></tooltip>
+                    </Button>
+                    <Button focusTraversable="false" styleClass="canvas-icon-button">
+                        <graphic><Region styleClass="toolbar-icon icon-fit"/></graphic>
+                        <tooltip><Tooltip text="Fit canvas"/></tooltip>
+                    </Button>
+                </HBox>
             </HBox>
-            <Label text="Cliquez pour poser une forme ou glissez pour definir sa taille avec precision." styleClass="section-caption"/>
-            <StackPane VBox.vgrow="ALWAYS" styleClass="canvas-frame">
+
+            <StackPane VBox.vgrow="ALWAYS" styleClass="canvas-outer-shell">
                 <Pane fx:id="drawingCanvas" styleClass="canvas-surface"/>
                 <VBox fx:id="emptyStateBox" alignment="CENTER" mouseTransparent="true" spacing="8" styleClass="empty-state-card">
-                    <Label text="Choisissez un outil" styleClass="empty-title"/>
-                    <Label text="Cliquez ou glissez dans le canevas pour dessiner." styleClass="empty-subtitle"/>
+                    <Label text="Choose a tool to start" styleClass="empty-title"/>
+                    <Label text="Click or drag in the canvas to draw" styleClass="empty-subtitle"/>
                 </VBox>
             </StackPane>
+            <BorderPane.margin>
+                <Insets top="12" right="12" bottom="12" left="0"/>
+            </BorderPane.margin>
         </VBox>
     </center>
 
     <right>
-        <VBox prefWidth="320" spacing="12" styleClass="surface-card history-panel">
-            <Label text="Historique" styleClass="section-title"/>
-            <Label text="La derniere action apparait en haut pour suivre chaque etape." styleClass="section-caption"/>
-            <ListView fx:id="historyListView" VBox.vgrow="ALWAYS" styleClass="history-list"/>
+        <VBox prefWidth="250" minWidth="220" spacing="0" styleClass="right-sidebar">
+            <TabPane styleClass="right-tabs" tabClosingPolicy="UNAVAILABLE">
+                <tabs>
+                    <Tab text="Graph">
+                        <graphic><Region styleClass="tab-icon icon-graph"/></graphic>
+                        <content>
+                            <VBox spacing="16" styleClass="right-tab-content">
+                                <VBox spacing="10">
+                                    <Label text="GRAPH TOOLS" styleClass="sidebar-section-title"/>
+                                    <Button fx:id="graphNodeActionBtn" text="Add Node" maxWidth="Infinity" styleClass="soft-panel-button">
+                                        <graphic><Region styleClass="toolbar-icon icon-plus-circle"/></graphic>
+                                    </Button>
+                                    <Button fx:id="graphEdgeActionBtn" text="Add Edge" maxWidth="Infinity" styleClass="soft-panel-button">
+                                        <graphic><Region styleClass="toolbar-icon icon-share-nodes"/></graphic>
+                                    </Button>
+                                    <Label fx:id="graphSummaryLabel" text="0 nodes | 0 edges" styleClass="summary-text"/>
+                                </VBox>
+
+                                <Separator styleClass="panel-divider"/>
+
+                                <VBox spacing="10">
+                                    <Label text="PATHFINDING" styleClass="sidebar-section-title"/>
+                                    <Label text="Start" styleClass="field-label"/>
+                                    <ComboBox fx:id="startNodeCombo" maxWidth="Infinity" promptText="Select start node" styleClass="modern-combo-box"/>
+                                    <Label text="End" styleClass="field-label"/>
+                                    <ComboBox fx:id="endNodeCombo" maxWidth="Infinity" promptText="Select end node" styleClass="modern-combo-box"/>
+                                    <Label text="Algorithm" styleClass="field-label"/>
+                                    <ComboBox fx:id="algorithmCombo" maxWidth="Infinity" promptText="Choose algorithm" styleClass="modern-combo-box"/>
+                                    <Button fx:id="computePathBtn" text="Compute Path" maxWidth="Infinity" styleClass="primary-button">
+                                        <graphic><Region styleClass="toolbar-icon icon-play-accent"/></graphic>
+                                    </Button>
+                                    <Button fx:id="clearPathBtn" text="Clear Highlight" maxWidth="Infinity" styleClass="soft-panel-button">
+                                        <graphic><Region styleClass="toolbar-icon icon-eraser"/></graphic>
+                                    </Button>
+                                    <Label fx:id="pathResultLabel"
+                                           text="Select two nodes and choose an algorithm to compute the shortest path."
+                                           wrapText="true"
+                                           styleClass="info-note"/>
+                                </VBox>
+                            </VBox>
+                        </content>
+                    </Tab>
+                    <Tab text="History">
+                        <graphic><Region styleClass="tab-icon icon-history"/></graphic>
+                        <content>
+                            <VBox spacing="12" styleClass="right-tab-content">
+                                <Label text="ACTION HISTORY" styleClass="sidebar-section-title"/>
+                                <ListView fx:id="historyListView" VBox.vgrow="ALWAYS" styleClass="history-list"/>
+                            </VBox>
+                        </content>
+                    </Tab>
+                    <Tab text="Project">
+                        <graphic><Region styleClass="tab-icon icon-folder"/></graphic>
+                        <content>
+                            <VBox spacing="12" styleClass="right-tab-content">
+                                <Label text="PROJECT" styleClass="sidebar-section-title"/>
+                                <Label text="Log Strategy" styleClass="field-label"/>
+                                <ComboBox fx:id="logStrategyCombo" maxWidth="Infinity" styleClass="modern-combo-box"/>
+                            </VBox>
+                        </content>
+                    </Tab>
+                </tabs>
+            </TabPane>
+            <BorderPane.margin>
+                <Insets top="12" right="0" bottom="12" left="0"/>
+            </BorderPane.margin>
         </VBox>
     </right>
 
     <bottom>
-        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="surface-card status-bar">
-            <Label text="Statut" styleClass="status-title"/>
-            <Label fx:id="statusLabel" text="Pret." styleClass="status-text"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label text="Interface JavaFX" styleClass="status-pill"/>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="bottom-dock">
+            <HBox alignment="CENTER_LEFT" spacing="14" styleClass="status-bar" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="&#9679;" styleClass="status-dot"/>
+                    <Label text="Ready" styleClass="status-ready-label"/>
+                </HBox>
+                <Label fx:id="statusLabel" text="Select a tool and start drawing." styleClass="status-message"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Region styleClass="status-inline-icon icon-pointer-muted"/>
+                <Label fx:id="currentToolStatusLabel" text="Select / Move" styleClass="status-chip"/>
+                <Label fx:id="mouseXStatusLabel" text="X: --" styleClass="status-meta-label"/>
+                <Label fx:id="mouseYStatusLabel" text="Y: --" styleClass="status-meta-label"/>
+                <Label fx:id="objectCountStatusLabel" text="Objects: 0" styleClass="status-meta-label"/>
+            </HBox>
+
+            <HBox alignment="CENTER" spacing="10" styleClass="status-zoom-box">
+                <Region styleClass="status-inline-icon icon-search-plus"/>
+                <Label text="100%" styleClass="status-zoom-text"/>
+                <Label text="⌄" styleClass="status-zoom-caret"/>
+            </HBox>
         </HBox>
     </bottom>
 
     <padding>
-        <Insets top="18" right="18" bottom="18" left="18"/>
+        <Insets top="10" right="10" bottom="10" left="10"/>
     </padding>
 </BorderPane>

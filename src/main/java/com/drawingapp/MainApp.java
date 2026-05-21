@@ -5,6 +5,8 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
+import javafx.geometry.Rectangle2D;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -22,9 +24,16 @@ public class MainApp extends Application {
 
         primaryStage.initStyle(StageStyle.UNDECORATED);
         primaryStage.setTitle("Drawing Studio");
-        primaryStage.setMinWidth(1200);
-        primaryStage.setMinHeight(760);
+        primaryStage.setMinWidth(1024);
+        primaryStage.setMinHeight(680);
         primaryStage.setScene(scene);
+
+        Rectangle2D visualBounds = Screen.getPrimary().getVisualBounds();
+        primaryStage.setX(visualBounds.getMinX());
+        primaryStage.setY(visualBounds.getMinY());
+        primaryStage.setWidth(visualBounds.getWidth());
+        primaryStage.setHeight(visualBounds.getHeight());
+
         primaryStage.show();
     }
 

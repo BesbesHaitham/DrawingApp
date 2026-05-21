@@ -60,6 +60,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -119,23 +120,25 @@ public class DrawingController implements ActionObserver {
     @FXML
     private VBox emptyStateBox;
     @FXML
-    private Button selectBtn;
+    private ToggleButton selectBtn;
     @FXML
-    private Button rectangleBtn;
+    private ToggleButton sidebarSelectBtn;
     @FXML
-    private Button circleBtn;
+    private ToggleButton rectangleBtn;
     @FXML
-    private Button lineBtn;
+    private ToggleButton circleBtn;
     @FXML
-    private Button triangleBtn;
+    private ToggleButton lineBtn;
     @FXML
-    private Button diamondBtn;
+    private ToggleButton triangleBtn;
     @FXML
-    private Button pentagonBtn;
+    private ToggleButton diamondBtn;
     @FXML
-    private Button hexagonBtn;
+    private ToggleButton pentagonBtn;
     @FXML
-    private Button starBtn;
+    private ToggleButton hexagonBtn;
+    @FXML
+    private ToggleButton starBtn;
     @FXML
     private Button colorBlueBtn;
     @FXML
@@ -171,6 +174,8 @@ public class DrawingController implements ActionObserver {
     @FXML
     private Button deleteBtn;
     @FXML
+    private Button deleteActionBtn;
+    @FXML
     private ComboBox<String> logStrategyCombo;
     @FXML
     private Button saveBtn;
@@ -196,6 +201,18 @@ public class DrawingController implements ActionObserver {
     private Label statusLabel;
     @FXML
     private Label activeToolBadge;
+    @FXML
+    private Button graphNodeActionBtn;
+    @FXML
+    private Button graphEdgeActionBtn;
+    @FXML
+    private Label currentToolStatusLabel;
+    @FXML
+    private Label mouseXStatusLabel;
+    @FXML
+    private Label mouseYStatusLabel;
+    @FXML
+    private Label objectCountStatusLabel;
     @FXML
     private ListView<String> historyListView;
     @FXML
@@ -270,14 +287,17 @@ public class DrawingController implements ActionObserver {
 
         historyListView.setItems(actionHistory);
         historyListView.setFocusTraversable(false);
-        historyListView.setPlaceholder(new Label("Aucune action pour le moment."));
+        historyListView.setPlaceholder(new Label("No actions yet."));
 
         drawingCanvas.setPickOnBounds(true);
         drawingCanvas.setOnMousePressed(this::onCanvasMousePressed);
         drawingCanvas.setOnMouseDragged(this::onCanvasMouseDragged);
         drawingCanvas.setOnMouseReleased(this::onCanvasMouseReleased);
+        drawingCanvas.setOnMouseMoved(this::onCanvasMouseMoved);
+        drawingCanvas.setOnMouseExited(event -> clearMouseCoordinates());
 
         selectBtn.setOnAction(event -> activateSelectionMode());
+        sidebarSelectBtn.setOnAction(event -> activateSelectionMode());
         rectangleBtn.setOnAction(event -> activateShapeTool(ShapeFactory.RECTANGLE));
         circleBtn.setOnAction(event -> activateShapeTool(ShapeFactory.CIRCLE));
         lineBtn.setOnAction(event -> activateShapeTool(ShapeFactory.LINE));
@@ -292,10 +312,13 @@ public class DrawingController implements ActionObserver {
         undoBtn.setOnAction(event -> undo());
         redoBtn.setOnAction(event -> redo());
         deleteBtn.setOnAction(event -> deleteSelected());
+        deleteActionBtn.setOnAction(event -> deleteSelected());
         clearBtn.setOnAction(event -> clearCanvas());
         saveBtn.setOnAction(event -> saveDrawing());
         openBtn.setOnAction(event -> openDrawing());
         quickOpenBtn.setOnAction(event -> openDrawing());
+        graphNodeActionBtn.setOnAction(event -> activateGraphNodeTool());
+        graphEdgeActionBtn.setOnAction(event -> activateGraphEdgeTool());
         computePathBtn.setOnAction(event -> computeShortestPath());
         clearPathBtn.setOnAction(event -> clearPathVisualization());
         minimizeBtn.setOnAction(event -> minimizeWindow());
@@ -324,38 +347,40 @@ public class DrawingController implements ActionObserver {
         updateActionButtons();
         updateGraphControls();
         updateEmptyState();
-        updateStatus("Choisissez un outil de dessin ou creez un graphe sur le canevas.");
+        updateCanvasStatusMetrics();
+        clearMouseCoordinates();
+        updateStatus("Select a tool and start drawing.");
     }
 
     private void activateSelectionMode() {
         setActiveTool(
                 TOOL_SELECT,
-                "Mode selection",
-                "Mode selection actif. Cliquez un element pour le selectionner."
+                "Select / Move",
+                "Selection mode active. Click an element to select it."
         );
     }
 
     private void activateShapeTool(String shapeType) {
         setActiveTool(
                 shapeType,
-                "Outil: " + getShapeDisplayName(shapeType),
-                getShapeDisplayName(shapeType) + " actif. Cliquez ou glissez dans le canevas."
+                getShapeDisplayName(shapeType),
+                getShapeDisplayName(shapeType) + " active. Click or drag in the canvas."
         );
     }
 
     private void activateGraphNodeTool() {
         setActiveTool(
                 TOOL_GRAPH_NODE,
-                "Mode graphe : noeud",
-                "Cliquez dans le canevas pour ajouter un noeud au graphe."
+                "Add Node",
+                "Click in the canvas to add a graph node."
         );
     }
 
     private void activateGraphEdgeTool() {
         setActiveTool(
                 TOOL_GRAPH_EDGE,
-                "Mode graphe : arete",
-                "Cliquez sur un noeud de depart puis sur un noeud d'arrivee."
+                "Add Edge",
+                "Click a start node and then an end node."
         );
     }
 
@@ -412,6 +437,10 @@ public class DrawingController implements ActionObserver {
         }
 
         finishDrawing(event.getX(), event.getY());
+    }
+
+    private void onCanvasMouseMoved(MouseEvent event) {
+        updateMouseCoordinates(event.getX(), event.getY());
     }
 
     private boolean isShapeDrawingToolActive() {
@@ -1140,7 +1169,10 @@ public class DrawingController implements ActionObserver {
         undoBtn.setDisable(!undoManager.canUndo());
         redoBtn.setDisable(!undoManager.canRedo());
         clearBtn.setDisable(drawingCanvas.getChildren().isEmpty());
-        deleteBtn.setDisable(selectedShape == null || !drawingCanvas.getChildren().contains(selectedShape));
+        boolean disableDelete = selectedShape == null || !drawingCanvas.getChildren().contains(selectedShape);
+        deleteBtn.setDisable(disableDelete);
+        deleteActionBtn.setDisable(disableDelete);
+        updateCanvasStatusMetrics();
     }
 
     private void initializeColorControls() {
@@ -1225,7 +1257,7 @@ public class DrawingController implements ActionObserver {
                         + "-fx-border-color: rgba(26, 45, 69, 0.12);"
                         + "-fx-border-radius: 999;"
         );
-        activeColorValueLabel.setText("Couleur active " + formatColorHex(currentShapeColorRgb));
+        activeColorValueLabel.setText(formatColorHex(currentShapeColorRgb));
     }
 
     private void applySwatchStyle(Button button, int rgb, boolean active) {
@@ -1261,8 +1293,8 @@ public class DrawingController implements ActionObserver {
             startNodeCombo.getItems().setAll(nodeLabels);
             endNodeCombo.getItems().setAll(nodeLabels);
 
-            startNodeCombo.setPromptText(nodeLabels.isEmpty() ? "Aucun noeud" : "Choisir un noeud");
-            endNodeCombo.setPromptText(nodeLabels.isEmpty() ? "Aucun noeud" : "Choisir un noeud");
+            startNodeCombo.setPromptText(nodeLabels.isEmpty() ? "No nodes available" : "Select start node");
+            endNodeCombo.setPromptText(nodeLabels.isEmpty() ? "No nodes available" : "Select end node");
 
             if (nodeLabels.contains(previousStart)) {
                 startNodeCombo.getSelectionModel().select(previousStart);
@@ -1299,18 +1331,22 @@ public class DrawingController implements ActionObserver {
 
         computePathBtn.setDisable(!canCompute);
         clearPathBtn.setDisable(!pathVisualizationActive);
-        graphSummaryLabel.setText(graphModel.getNodes().size() + " noeuds | " + graphModel.getEdges().size() + " aretes");
+        graphSummaryLabel.setText(graphModel.getNodes().size() + " nodes | " + graphModel.getEdges().size() + " edges");
         if (!pathVisualizationActive && (pathResultLabel.getText() == null || pathResultLabel.getText().isBlank())) {
             pathResultLabel.setText(getDefaultPathMessage());
         }
     }
 
     private void updateToolBadge(String text) {
-        activeToolBadge.setText(text);
+        if (activeToolBadge != null) {
+            activeToolBadge.setText(text);
+        }
+        currentToolStatusLabel.setText(text);
     }
 
     private void updateToolButtonStyles() {
         setToolButtonState(selectBtn, TOOL_SELECT.equals(activeTool));
+        setToolButtonState(sidebarSelectBtn, TOOL_SELECT.equals(activeTool));
         setToolButtonState(rectangleBtn, ShapeFactory.RECTANGLE.equals(activeTool));
         setToolButtonState(circleBtn, ShapeFactory.CIRCLE.equals(activeTool));
         setToolButtonState(lineBtn, ShapeFactory.LINE.equals(activeTool));
@@ -1323,15 +1359,23 @@ public class DrawingController implements ActionObserver {
         setToolButtonState(graphEdgeBtn, TOOL_GRAPH_EDGE.equals(activeTool));
     }
 
+    private void setToolButtonState(ToggleButton button, boolean active) {
+        button.getStyleClass().removeAll("selected-tool", "selected-toolbar-tool");
+        if (active) {
+            button.getStyleClass().add(button == selectBtn ? "selected-toolbar-tool" : "selected-tool");
+        }
+        button.setSelected(active);
+    }
+
     private void setToolButtonState(Button button, boolean active) {
-        button.getStyleClass().remove("selected-tool");
+        button.getStyleClass().removeAll("selected-tool", "selected-toolbar-tool");
         if (active) {
             button.getStyleClass().add("selected-tool");
         }
     }
 
     private void updateEmptyState() {
-        boolean empty = getDrawableShapeCount() == 0;
+        boolean empty = getCanvasObjectCount() == 0;
         emptyStateBox.setVisible(empty);
         emptyStateBox.setManaged(empty);
     }
@@ -1339,6 +1383,17 @@ public class DrawingController implements ActionObserver {
     private long getDrawableShapeCount() {
         return drawingCanvas.getChildren().stream()
                 .filter(node -> node != previewShape)
+                .count();
+    }
+
+    private long getCanvasObjectCount() {
+        return drawingCanvas.getChildren().stream()
+                .filter(node -> node != previewShape)
+                .filter(node -> node instanceof Shape)
+                .filter(node -> {
+                    Object elementKind = node.getProperties().get(ELEMENT_KIND_KEY);
+                    return elementKind != null || node.getProperties().containsKey(SHAPE_TYPE_KEY);
+                })
                 .count();
     }
 
@@ -1388,14 +1443,14 @@ public class DrawingController implements ActionObserver {
     private String getShapeDisplayName(String shapeType) {
         return switch (shapeType) {
             case ShapeFactory.RECTANGLE -> "Rectangle";
-            case ShapeFactory.CIRCLE -> "Cercle";
-            case ShapeFactory.LINE -> "Ligne";
+            case ShapeFactory.CIRCLE -> "Circle";
+            case ShapeFactory.LINE -> "Line";
             case ShapeFactory.TRIANGLE -> "Triangle";
-            case ShapeFactory.DIAMOND -> "Losange";
-            case ShapeFactory.PENTAGON -> "Pentagone";
-            case ShapeFactory.HEXAGON -> "Hexagone";
-            case ShapeFactory.STAR -> "Etoile";
-            default -> "Forme";
+            case ShapeFactory.DIAMOND -> "Diamond";
+            case ShapeFactory.PENTAGON -> "Pentagon";
+            case ShapeFactory.HEXAGON -> "Hexagon";
+            case ShapeFactory.STAR -> "Star";
+            default -> "Shape";
         };
     }
 
@@ -1663,7 +1718,7 @@ public class DrawingController implements ActionObserver {
             return;
         }
 
-        maximizeBtn.setText(stage.isMaximized() ? "[]" : "[ ]");
+        maximizeBtn.setText(stage.isMaximized() ? "❐" : "□");
     }
 
     private Stage getStage() {
@@ -1701,7 +1756,21 @@ public class DrawingController implements ActionObserver {
     }
 
     private String getDefaultPathMessage() {
-        return "Selectionnez deux noeuds puis choisissez un algorithme pour calculer le plus court chemin.";
+        return "Select two nodes and choose an algorithm to compute the shortest path.";
+    }
+
+    private void updateCanvasStatusMetrics() {
+        objectCountStatusLabel.setText("Objects: " + getCanvasObjectCount());
+    }
+
+    private void updateMouseCoordinates(double x, double y) {
+        mouseXStatusLabel.setText("X: " + formatNumber(x));
+        mouseYStatusLabel.setText("Y: " + formatNumber(y));
+    }
+
+    private void clearMouseCoordinates() {
+        mouseXStatusLabel.setText("X: --");
+        mouseYStatusLabel.setText("Y: --");
     }
 
     @Override
