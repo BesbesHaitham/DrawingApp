@@ -3,9 +3,13 @@ target/
 *.jar
 *.war
 *.ear
+*.class
+dependency-reduced-pom.xml
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
+tools/apache-maven-*/
+tools/apache-maven-*-bin.zip
 
 # IDE
 .idea/
