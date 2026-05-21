@@ -15,6 +15,8 @@ import com.drawingapp.graph.DefaultShortestPathAlgorithmRegistry;
 import com.drawingapp.graph.GraphEdgeItem;
 import com.drawingapp.graph.GraphModel;
 import com.drawingapp.graph.GraphNodeItem;
+import com.drawingapp.graph.GraphPathComputation;
+import com.drawingapp.graph.GraphPathService;
 import com.drawingapp.graph.ShortestPathAlgorithm;
 import com.drawingapp.graph.ShortestPathAlgorithmRegistry;
 import com.drawingapp.graph.ShortestPathResult;
@@ -213,6 +215,7 @@ public class DrawingController implements ActionObserver {
     private final ActionObservable actionObservable;
     private final LogStrategyFactory logStrategyFactory;
     private final ShortestPathAlgorithmRegistry shortestPathAlgorithmRegistry;
+    private final GraphPathService graphPathService;
     private final DrawingFileCodec drawingFileCodec;
     private final ObservableList<String> actionHistory;
     private final GraphModel graphModel;
@@ -258,6 +261,7 @@ public class DrawingController implements ActionObserver {
         this.graphModel = graphModel;
         this.logStrategyFactory = logStrategyFactory;
         this.shortestPathAlgorithmRegistry = shortestPathAlgorithmRegistry;
+        this.graphPathService = new GraphPathService();
         this.drawingFileCodec = new DrawingFileCodec();
         this.actionHistory = FXCollections.observableArrayList();
         this.logStrategy = logStrategyFactory.create("Console");
@@ -855,51 +859,40 @@ public class DrawingController implements ActionObserver {
     }
 
     private void computeShortestPath() {
-        GraphNodeItem source = graphModel.getNodeByLabel(startNodeCombo.getValue());
-        GraphNodeItem target = graphModel.getNodeByLabel(endNodeCombo.getValue());
-        ShortestPathAlgorithm algorithm = shortestPathAlgorithmRegistry.getByName(algorithmCombo.getValue());
-
-        if (source == null || target == null || algorithm == null) {
-            String message = "Selectionnez les noeuds et l'algorithme avant le calcul.";
-            pathResultLabel.setText(message);
-            updateStatus(message);
-            updateGraphControls();
-            return;
-        }
-
         clearPathVisualization(false);
-        ShortestPathResult result = algorithm.compute(graphModel, source, target);
-        if (!result.isSuccess()) {
-            pathResultLabel.setText(result.getMessage());
-            updateStatus(result.getMessage());
+        GraphPathComputation computation = graphPathService.computeShortestPath(
+                graphModel,
+                startNodeCombo.getValue(),
+                endNodeCombo.getValue(),
+                algorithmCombo.getValue(),
+                shortestPathAlgorithmRegistry
+        );
+        if (!computation.success()) {
+            pathResultLabel.setText(computation.message());
+            updateStatus(computation.message());
             updateGraphControls();
             return;
         }
 
-        for (GraphNodeItem node : result.getPathNodes()) {
+        for (GraphNodeItem node : computation.result().getPathNodes()) {
             node.setHighlighted(true);
             applyGraphNodeVisual(node, node.getCircle() == selectedShape);
         }
-        for (GraphEdgeItem edge : result.getPathEdges()) {
+        for (GraphEdgeItem edge : computation.result().getPathEdges()) {
             edge.setHighlighted(true);
             applyGraphEdgeVisual(edge, edge.getLine() == selectedShape);
         }
 
         pathVisualizationActive = true;
-        String pathText = result.getPathNodes().stream()
-                .map(GraphNodeItem::getLabel)
-                .collect(Collectors.joining(" -> "));
-        String message = algorithm.getName() + " : " + pathText
-                + " | poids total = " + formatNumber(result.getTotalWeight());
-        pathResultLabel.setText(message);
+        pathResultLabel.setText(computation.message());
         actionObservable.notifyActionExecuted(
-                "Plus court chemin calcule avec " + algorithm.getName()
-                        + " entre " + source.getLabel()
-                        + " et " + target.getLabel()
-                        + " : " + pathText
-                        + " (poids " + formatNumber(result.getTotalWeight()) + ")"
+                "Plus court chemin calcule avec " + computation.algorithm().getName()
+                        + " entre " + computation.source().getLabel()
+                        + " et " + computation.target().getLabel()
+                        + " : " + computation.pathText()
+                        + " (poids " + formatNumber(computation.result().getTotalWeight()) + ")"
         );
-        updateStatus("Chemin calcule avec " + algorithm.getName() + ".");
+        updateStatus("Chemin calcule avec " + computation.algorithm().getName() + ".");
         updateGraphControls();
     }
 
