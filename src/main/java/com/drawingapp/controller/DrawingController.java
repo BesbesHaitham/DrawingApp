@@ -13,6 +13,7 @@ import com.drawingapp.dao.DrawingDAO;
 import com.drawingapp.factory.ShapeFactory;
 import com.drawingapp.graph.DefaultShortestPathAlgorithmRegistry;
 import com.drawingapp.graph.GraphEdgeItem;
+import com.drawingapp.graph.GraphCanvasService;
 import com.drawingapp.graph.GraphModel;
 import com.drawingapp.graph.GraphNodeItem;
 import com.drawingapp.graph.GraphPathComputation;
@@ -83,13 +84,6 @@ public class DrawingController implements ActionObserver {
     private static final double DEFAULT_RECT_HEIGHT = 80.0;
     private static final double DEFAULT_CIRCLE_SIZE = 96.0;
     private static final double DEFAULT_LINE_LENGTH = 140.0;
-    private static final double GRAPH_NODE_RADIUS = 22.0;
-    private static final double GRAPH_NODE_GAP = 10.0;
-    private static final Paint GRAPH_NODE_FILL = Color.web("#f9fbff");
-    private static final Paint GRAPH_NODE_STROKE = Color.web("#31587a");
-    private static final Paint GRAPH_EDGE_STROKE = Color.web("#60748a");
-    private static final Paint GRAPH_PATH_FILL = Color.web("#fff0bf");
-    private static final Paint GRAPH_PATH_STROKE = Color.web("#d97706");
     private static final Paint SELECTION_STROKE = Color.web("#0f766e");
     private static final String DRAWING_FILE_EXTENSION = ".drawing";
     private static final String BASE_STROKE_KEY = "baseStroke";
@@ -216,6 +210,7 @@ public class DrawingController implements ActionObserver {
     private final LogStrategyFactory logStrategyFactory;
     private final ShortestPathAlgorithmRegistry shortestPathAlgorithmRegistry;
     private final GraphPathService graphPathService;
+    private final GraphCanvasService graphCanvasService;
     private final DrawingFileCodec drawingFileCodec;
     private final ObservableList<String> actionHistory;
     private final GraphModel graphModel;
@@ -230,8 +225,6 @@ public class DrawingController implements ActionObserver {
     private boolean windowControlsConfigured;
     private double windowDragOffsetX;
     private double windowDragOffsetY;
-    private int graphNodeSequence;
-    private GraphNodeItem pendingEdgeStartNode;
     private boolean pathVisualizationActive;
     private boolean updatingGraphControls;
     private boolean updatingColorControls;
@@ -262,6 +255,7 @@ public class DrawingController implements ActionObserver {
         this.logStrategyFactory = logStrategyFactory;
         this.shortestPathAlgorithmRegistry = shortestPathAlgorithmRegistry;
         this.graphPathService = new GraphPathService();
+        this.graphCanvasService = new GraphCanvasService();
         this.drawingFileCodec = new DrawingFileCodec();
         this.actionHistory = FXCollections.observableArrayList();
         this.logStrategy = logStrategyFactory.create("Console");
@@ -368,7 +362,7 @@ public class DrawingController implements ActionObserver {
     private void setActiveTool(String tool, String badgeText, String statusText) {
         activeTool = tool;
         if (!TOOL_GRAPH_EDGE.equals(tool)) {
-            pendingEdgeStartNode = null;
+            graphCanvasService.clearPendingEdgeSelection();
         }
         updateToolBadge(badgeText);
         updateToolButtonStyles();
@@ -498,15 +492,18 @@ public class DrawingController implements ActionObserver {
     }
 
     private void addGraphNode(double canvasX, double canvasY) {
-        double centerX = clampGraphCoordinateX(canvasX);
-        double centerY = clampGraphCoordinateY(canvasY);
-
-        if (isNodeTooClose(centerX, centerY)) {
+        GraphNodeItem node = graphCanvasService.createGraphNode(
+                canvasX,
+                canvasY,
+                drawingCanvas.getWidth(),
+                drawingCanvas.getHeight(),
+                graphModel,
+                currentShapeColorRgb
+        );
+        if (node == null) {
             updateStatus("Espace insuffisant. Placez le noeud un peu plus loin.");
             return;
         }
-
-        GraphNodeItem node = createGraphNode(centerX, centerY);
         AddGraphNodeCommand command = new AddGraphNodeCommand(drawingCanvas, graphModel, node);
         undoManager.executeCommand(command);
 
@@ -519,44 +516,11 @@ public class DrawingController implements ActionObserver {
         updateEmptyState();
     }
 
-    private GraphNodeItem createGraphNode(double centerX, double centerY) {
-        int nodeId = ++graphNodeSequence;
-        String label = buildNodeLabel(nodeId - 1);
-        return createGraphNode(nodeId, label, centerX, centerY, currentShapeColorRgb);
-    }
-
     private GraphNodeItem createGraphNode(int nodeId, String label, double centerX, double centerY, int accentColorRgb) {
-        Color accentColor = toFxColor(accentColorRgb);
-        Color fillColor = accentColor.deriveColor(0, 1.0, 1.0, 0.16);
-        Color strokeColor = accentColor.deriveColor(0, 1.0, 0.74, 1.0);
-        Color labelColor = accentColor.deriveColor(0, 1.0, 0.44, 1.0);
-
-        Circle circle = new Circle(centerX, centerY, GRAPH_NODE_RADIUS);
-        circle.setFill(fillColor);
-        circle.setStroke(strokeColor);
-        circle.setStrokeWidth(2.2);
-
-        Text labelText = createCenteredText(label, centerX, centerY + 0.5, 13, toHexColor(labelColor));
-
-        GraphNodeItem node = new GraphNodeItem(nodeId, label, circle, labelText, accentColorRgb);
-        prepareGraphNode(node);
-        return node;
-    }
-
-    private void prepareGraphNode(GraphNodeItem node) {
-        Circle circle = node.getCircle();
-        circle.getProperties().put(ELEMENT_KIND_KEY, ELEMENT_GRAPH_NODE);
-        circle.getProperties().put(GRAPH_NODE_KEY, node);
-        circle.getProperties().put(BASE_STROKE_KEY, circle.getStroke());
-        circle.getProperties().put(BASE_STROKE_WIDTH_KEY, circle.getStrokeWidth());
-        circle.getProperties().put(BASE_FILL_KEY, circle.getFill());
-        circle.setMouseTransparent(false);
-        Text labelText = node.getLabelText();
-        labelText.getProperties().put(ELEMENT_KIND_KEY, ELEMENT_GRAPH_NODE_LABEL);
-        labelText.getProperties().put(BASE_FILL_KEY, labelText.getFill());
-        labelText.setMouseTransparent(true);
+        GraphNodeItem node = graphCanvasService.createGraphNode(nodeId, label, centerX, centerY, accentColorRgb);
         attachGraphNodeInteractions(node);
-        applyGraphNodeVisual(node, false);
+        graphCanvasService.applyGraphNodeVisual(node, false);
+        return node;
     }
 
     private void attachGraphNodeInteractions(GraphNodeItem node) {
@@ -581,85 +545,49 @@ public class DrawingController implements ActionObserver {
     }
 
     private void handleGraphEdgeNodeSelection(GraphNodeItem node) {
-        if (pendingEdgeStartNode == null) {
-            pendingEdgeStartNode = node;
-            setSelectedShape(node.getCircle());
-            updateStatus("Depart choisi: " + node.getLabel() + ". Cliquez le noeud d'arrivee.");
+        GraphCanvasService.EdgeCreationOutcome outcome = graphCanvasService.selectNodeForEdge(
+                node,
+                graphModel,
+                this::requestEdgeWeight,
+                currentShapeColorRgb
+        );
+
+        if (outcome.clearSelection()) {
+            clearSelection();
+            updateStatus(outcome.message());
             return;
         }
 
-        if (pendingEdgeStartNode == node) {
-            updateStatus("Choisissez un autre noeud pour terminer l'arete.");
+        if (outcome.selectedNode() != null) {
+            setSelectedShape(outcome.selectedNode().getCircle());
+            updateStatus(outcome.message());
             return;
         }
 
-        if (graphModel.hasEdgeBetween(pendingEdgeStartNode, node)) {
-            updateStatus("Une arete existe deja entre " + pendingEdgeStartNode.getLabel()
-                    + " et " + node.getLabel() + ".");
-            pendingEdgeStartNode = null;
+        if (outcome.createdEdge() == null) {
+            updateStatus(outcome.message());
             clearSelection();
             return;
         }
 
-        Double weight = requestEdgeWeight(pendingEdgeStartNode, node);
-        if (weight == null) {
-            updateStatus("Creation de l'arete annulee.");
-            pendingEdgeStartNode = null;
-            clearSelection();
-            return;
-        }
-
-        GraphEdgeItem edge = createGraphEdge(pendingEdgeStartNode, node, weight);
+        GraphEdgeItem edge = outcome.createdEdge();
         AddGraphEdgeCommand command = new AddGraphEdgeCommand(drawingCanvas, graphModel, edge);
         undoManager.executeCommand(command);
 
-        pendingEdgeStartNode = null;
         clearPathVisualization(false);
         setSelectedShape(edge.getLine());
         actionObservable.notifyActionExecuted(command.getDescription());
-        updateStatus("Arete " + edge.getStartNode().getLabel() + " - " + edge.getEndNode().getLabel()
-                + " ajoutee.");
+        updateStatus(outcome.message());
         updateActionButtons();
         updateGraphControls();
         updateEmptyState();
     }
 
-    private GraphEdgeItem createGraphEdge(GraphNodeItem first, GraphNodeItem second, double weight) {
-        return createGraphEdge(first, second, weight, currentShapeColorRgb);
-    }
-
     private GraphEdgeItem createGraphEdge(GraphNodeItem first, GraphNodeItem second, double weight, int accentColorRgb) {
-        Color accentColor = toFxColor(accentColorRgb);
-        Color strokeColor = accentColor.deriveColor(0, 1.0, 0.78, 1.0);
-        Color weightColor = accentColor.deriveColor(0, 1.0, 0.46, 1.0);
-
-        Line line = new Line(first.getCenterX(), first.getCenterY(), second.getCenterX(), second.getCenterY());
-        line.setStroke(strokeColor);
-        line.setStrokeWidth(3);
-
-        double midX = (first.getCenterX() + second.getCenterX()) / 2.0;
-        double midY = (first.getCenterY() + second.getCenterY()) / 2.0;
-        Text weightText = createCenteredText(formatNumber(weight), midX, midY - 10, 12, toHexColor(weightColor));
-
-        GraphEdgeItem edge = new GraphEdgeItem(first, second, weight, line, weightText, accentColorRgb);
-        prepareGraphEdge(edge);
-        return edge;
-    }
-
-    private void prepareGraphEdge(GraphEdgeItem edge) {
-        Line line = edge.getLine();
-        line.getProperties().put(ELEMENT_KIND_KEY, ELEMENT_GRAPH_EDGE);
-        line.getProperties().put(GRAPH_EDGE_KEY, edge);
-        line.getProperties().put(BASE_STROKE_KEY, line.getStroke());
-        line.getProperties().put(BASE_STROKE_WIDTH_KEY, line.getStrokeWidth());
-        line.getProperties().put(BASE_FILL_KEY, line.getFill());
-        line.setMouseTransparent(false);
-        Text weightText = edge.getWeightText();
-        weightText.getProperties().put(ELEMENT_KIND_KEY, ELEMENT_GRAPH_EDGE_LABEL);
-        weightText.getProperties().put(BASE_FILL_KEY, weightText.getFill());
-        weightText.setMouseTransparent(true);
+        GraphEdgeItem edge = graphCanvasService.createGraphEdge(first, second, weight, accentColorRgb);
         attachGraphEdgeInteractions(edge);
-        applyGraphEdgeVisual(edge, false);
+        graphCanvasService.applyGraphEdgeVisual(edge, false);
+        return edge;
     }
 
     private void attachGraphEdgeInteractions(GraphEdgeItem edge) {
@@ -718,7 +646,7 @@ public class DrawingController implements ActionObserver {
         }
 
         removePreview();
-        pendingEdgeStartNode = null;
+        graphCanvasService.clearPendingEdgeSelection();
         clearSelection();
         clearPathVisualization(false);
 
@@ -743,7 +671,7 @@ public class DrawingController implements ActionObserver {
             return;
         }
 
-        pendingEdgeStartNode = null;
+        graphCanvasService.clearPendingEdgeSelection();
         clearSelection();
         clearPathVisualization(false);
 
@@ -755,14 +683,16 @@ public class DrawingController implements ActionObserver {
             Shape nodeCircle = findLastGraphShape(ELEMENT_GRAPH_NODE);
             if (nodeCircle != null) {
                 GraphNodeItem node = (GraphNodeItem) nodeCircle.getProperties().get(GRAPH_NODE_KEY);
-                prepareGraphNode(node);
+                attachGraphNodeInteractions(node);
+                graphCanvasService.applyGraphNodeVisual(node, false);
                 setSelectedShape(node.getCircle());
             }
         } else if (command instanceof AddGraphEdgeCommand addGraphEdgeCommand) {
             Shape edgeLine = findLastGraphShape(ELEMENT_GRAPH_EDGE);
             if (edgeLine != null) {
                 GraphEdgeItem edge = (GraphEdgeItem) edgeLine.getProperties().get(GRAPH_EDGE_KEY);
-                prepareGraphEdge(edge);
+                attachGraphEdgeInteractions(edge);
+                graphCanvasService.applyGraphEdgeVisual(edge, false);
                 setSelectedShape(edge.getLine());
             }
         }
@@ -806,7 +736,7 @@ public class DrawingController implements ActionObserver {
             command = new DeleteCommand(drawingCanvas, shapeToDelete);
         }
 
-        pendingEdgeStartNode = null;
+        graphCanvasService.clearPendingEdgeSelection();
         clearSelection();
         undoManager.executeCommand(command);
         clearPathVisualization(false);
@@ -828,7 +758,7 @@ public class DrawingController implements ActionObserver {
         }
 
         clearSelection();
-        pendingEdgeStartNode = null;
+        graphCanvasService.clearPendingEdgeSelection();
 
         List<GraphNodeItem> graphNodesSnapshot = new ArrayList<>(graphModel.getNodes());
         List<GraphEdgeItem> graphEdgesSnapshot = new ArrayList<>(graphModel.getEdges());
@@ -990,7 +920,7 @@ public class DrawingController implements ActionObserver {
         removePreview();
         drawingGestureActive = false;
         clearSelection();
-        pendingEdgeStartNode = null;
+        graphCanvasService.clearPendingEdgeSelection();
         pathVisualizationActive = false;
         pathResultLabel.setText(getDefaultPathMessage());
         drawingCanvas.getChildren().clear();
@@ -1055,7 +985,7 @@ public class DrawingController implements ActionObserver {
             drawingCanvas.getChildren().add(node.getLabelText());
         }
 
-        graphNodeSequence = Math.max(loadedNodeSequence, maxNodeId);
+        graphCanvasService.setNodeSequence(Math.max(loadedNodeSequence, maxNodeId));
         activateSelectionMode();
         updateActionButtons();
         updateGraphControls();
@@ -1195,57 +1125,15 @@ public class DrawingController implements ActionObserver {
     }
 
     private void bringGraphNodeToFront(GraphNodeItem node) {
-        node.getCircle().toFront();
-        node.getLabelText().toFront();
+        graphCanvasService.bringGraphNodeToFront(node);
     }
 
     private void applyGraphNodeVisual(GraphNodeItem node, boolean selected) {
-        Circle circle = node.getCircle();
-        Text label = node.getLabelText();
-        Paint baseFill = (Paint) circle.getProperties().getOrDefault(BASE_FILL_KEY, circle.getFill());
-        Paint baseStroke = (Paint) circle.getProperties().getOrDefault(BASE_STROKE_KEY, circle.getStroke());
-        Paint baseLabelFill = (Paint) label.getProperties().getOrDefault(BASE_FILL_KEY, label.getFill());
-        double baseStrokeWidth =
-                ((Number) circle.getProperties().getOrDefault(BASE_STROKE_WIDTH_KEY, circle.getStrokeWidth()))
-                        .doubleValue();
-
-        circle.setFill(node.isHighlighted() ? GRAPH_PATH_FILL : baseFill);
-        circle.setStroke(selected ? SELECTION_STROKE : node.isHighlighted() ? GRAPH_PATH_STROKE : baseStroke);
-        circle.setStrokeWidth(selected ? baseStrokeWidth + 1.8 : node.isHighlighted() ? baseStrokeWidth + 1.2 : baseStrokeWidth);
-        circle.setEffect(selected
-                ? new DropShadow(18, Color.rgb(15, 118, 110, 0.22))
-                : node.isHighlighted()
-                ? new DropShadow(18, Color.rgb(217, 119, 6, 0.20))
-                : null);
-        label.setFill(selected
-                ? SELECTION_STROKE
-                : node.isHighlighted()
-                ? Color.web("#9a3412")
-                : baseLabelFill);
+        graphCanvasService.applyGraphNodeVisual(node, selected);
     }
 
     private void applyGraphEdgeVisual(GraphEdgeItem edge, boolean selected) {
-        Line line = edge.getLine();
-        Text weightText = edge.getWeightText();
-        Paint baseStroke = (Paint) line.getProperties().getOrDefault(BASE_STROKE_KEY, line.getStroke());
-        Paint baseWeightFill = (Paint) weightText.getProperties().getOrDefault(BASE_FILL_KEY, weightText.getFill());
-        double baseStrokeWidth =
-                ((Number) line.getProperties().getOrDefault(BASE_STROKE_WIDTH_KEY, line.getStrokeWidth()))
-                        .doubleValue();
-
-        line.setStroke(selected ? SELECTION_STROKE : edge.isHighlighted() ? GRAPH_PATH_STROKE : baseStroke);
-        line.setStrokeWidth(selected ? baseStrokeWidth + 1.6 : edge.isHighlighted() ? baseStrokeWidth + 1.2 : baseStrokeWidth);
-        line.setEffect(selected
-                ? new DropShadow(16, Color.rgb(15, 118, 110, 0.18))
-                : edge.isHighlighted()
-                ? new DropShadow(16, Color.rgb(217, 119, 6, 0.18))
-                : null);
-        weightText.setFill(selected
-                ? SELECTION_STROKE
-                : edge.isHighlighted()
-                ? Color.web("#9a3412")
-                : baseWeightFill);
-        weightText.setUnderline(edge.isHighlighted());
+        graphCanvasService.applyGraphEdgeVisual(edge, selected);
     }
 
     private void updateActionButtons() {
@@ -1497,25 +1385,6 @@ public class DrawingController implements ActionObserver {
         return Math.max(0, Math.min(value, drawingCanvas.getHeight()));
     }
 
-    private double clampGraphCoordinateX(double value) {
-        return Math.max(GRAPH_NODE_RADIUS + 12, Math.min(value, Math.max(GRAPH_NODE_RADIUS + 12, drawingCanvas.getWidth() - GRAPH_NODE_RADIUS - 12)));
-    }
-
-    private double clampGraphCoordinateY(double value) {
-        return Math.max(GRAPH_NODE_RADIUS + 12, Math.min(value, Math.max(GRAPH_NODE_RADIUS + 12, drawingCanvas.getHeight() - GRAPH_NODE_RADIUS - 12)));
-    }
-
-    private boolean isNodeTooClose(double centerX, double centerY) {
-        double minDistance = GRAPH_NODE_RADIUS * 2 + GRAPH_NODE_GAP;
-        for (GraphNodeItem node : graphModel.getNodes()) {
-            double distance = Math.hypot(centerX - node.getCenterX(), centerY - node.getCenterY());
-            if (distance < minDistance) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private String getShapeDisplayName(String shapeType) {
         return switch (shapeType) {
             case ShapeFactory.RECTANGLE -> "Rectangle";
@@ -1613,7 +1482,7 @@ public class DrawingController implements ActionObserver {
         }
 
         return drawingFileCodec.serialize(
-                new DrawingFileData(graphNodeSequence, shapeRecords, nodeRecords, edgeRecords)
+                new DrawingFileData(graphCanvasService.getNodeSequence(), shapeRecords, nodeRecords, edgeRecords)
         );
     }
 
@@ -1812,27 +1681,6 @@ public class DrawingController implements ActionObserver {
         historyListView.scrollTo(0);
     }
 
-    private Text createCenteredText(String content, double centerX, double centerY, int fontSize, String color) {
-        Text text = new Text(content);
-        text.setFont(Font.font("Segoe UI Semibold", fontSize));
-        text.setFill(Color.web(color));
-        text.applyCss();
-        double width = text.getLayoutBounds().getWidth();
-        text.setX(centerX - (width / 2.0));
-        text.setY(centerY + 4);
-        return text;
-    }
-
-    private String buildNodeLabel(int index) {
-        StringBuilder builder = new StringBuilder();
-        int value = index;
-        do {
-            builder.insert(0, (char) ('A' + (value % 26)));
-            value = (value / 26) - 1;
-        } while (value >= 0);
-        return builder.toString();
-    }
-
     private Color toFxColor(int rgb) {
         return Color.rgb((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
     }
@@ -1842,14 +1690,6 @@ public class DrawingController implements ActionObserver {
         int green = (int) Math.round(color.getGreen() * 255);
         int blue = (int) Math.round(color.getBlue() * 255);
         return (red << 16) | (green << 8) | blue;
-    }
-
-    private String toHexColor(Color color) {
-        return String.format("#%02X%02X%02X",
-                (int) Math.round(color.getRed() * 255),
-                (int) Math.round(color.getGreen() * 255),
-                (int) Math.round(color.getBlue() * 255)
-        );
     }
 
     private String formatColorHex(int value) {
