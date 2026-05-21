@@ -1,0 +1,55 @@
+﻿@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+class DrawingController {
+  -logStrategy: LogStrategy
+  -logStrategyFactory: LogStrategyFactory
+  -changeLogStrategy()
+}
+
+interface LogStrategy {
+  +log(message: String)
+  +getStrategyName(): String
+}
+
+interface LogStrategyFactory {
+  +create(strategyName: String): LogStrategy
+}
+
+class DefaultLogStrategyFactory {
+  -actionLogRepository: ActionLogRepository
+  +create(strategyName: String): LogStrategy
+}
+class ConsoleLogStrategy {
+  +log(message: String)
+  +getStrategyName(): String
+}
+class FileLogStrategy {
+  -logFilePath: String
+  +log(message: String)
+  +getStrategyName(): String
+}
+class DatabaseLogStrategy {
+  -dao: ActionLogRepository
+  +log(message: String)
+  +getStrategyName(): String
+}
+interface ActionLogRepository {
+  +saveLog(action: String, timestamp: String): boolean
+}
+
+DrawingController --> LogStrategy : contexte
+DrawingController --> LogStrategyFactory : selection
+DefaultLogStrategyFactory ..|> LogStrategyFactory
+LogStrategy <|.. ConsoleLogStrategy
+LogStrategy <|.. FileLogStrategy
+LogStrategy <|.. DatabaseLogStrategy
+DatabaseLogStrategy --> ActionLogRepository
+DefaultLogStrategyFactory --> ActionLogRepository
+
+legend bottom
+Ce diagramme illustre le pattern Strategy applique a la journalisation,
+avec choix dynamique de la strategie (console, fichier, base de donnees).
+endlegend
+@enduml

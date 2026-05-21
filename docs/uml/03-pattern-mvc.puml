@@ -1,0 +1,65 @@
+﻿@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+package "View" {
+  class "drawing-view.fxml" as DrawingView <<FXML>> {
+    +drawingCanvas: Pane
+    +tool buttons
+    +historyListView: ListView
+  }
+}
+
+package "Controller" {
+  class DrawingController {
+    -activeTool: String
+    -selectedColor: Color
+    -undoManager: UndoManager
+    +initialize()
+    -undo()
+    -redo()
+    -computeShortestPath()
+  }
+}
+
+package "Model" {
+  abstract class ShapeModel {
+    -startX: double
+    -startY: double
+    -endX: double
+    -endY: double
+    +createShape(): Shape
+  }
+  class GraphModel {
+    -nodes: List<GraphNodeItem>
+    -edges: List<GraphEdgeItem>
+    +addNode(node)
+    +addEdge(edge)
+    +removeNode(node)
+    +removeEdge(edge)
+  }
+  class GraphNodeItem {
+    -id: int
+    -label: String
+    -centerX: double
+    -centerY: double
+  }
+  class GraphEdgeItem {
+    -from: GraphNodeItem
+    -to: GraphNodeItem
+    -weight: double
+  }
+}
+
+DrawingView ..> DrawingController : events UI
+DrawingController --> ShapeModel : cree/manipule
+DrawingController --> GraphModel : met a jour
+GraphModel "1" o-- "*" GraphNodeItem
+GraphModel "1" o-- "*" GraphEdgeItem
+DrawingController ..> DrawingView : rafraichit la vue
+
+legend bottom
+Ce diagramme illustre l'organisation MVC: la vue capture les interactions,
+le controleur orchestre la logique, et le modele porte l'etat metier.
+endlegend
+@enduml

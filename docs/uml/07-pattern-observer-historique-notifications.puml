@@ -1,0 +1,36 @@
+﻿@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+class DrawingController {
+  -actionHistory: ObservableList<String>
+  -actionObservable: ActionObservable
+  +onActionExecuted(desc: String)
+  +onActionUndone(desc: String)
+  +getObserverName(): String
+}
+
+class ActionObservable {
+  -observers: List<ActionObserver>
+  +addObserver(o: ActionObserver)
+  +removeObserver(o: ActionObserver)
+  +notifyActionExecuted(desc: String)
+  +notifyActionUndone(desc: String)
+  +getObserverCount(): int
+}
+
+interface ActionObserver {
+  +onActionExecuted(desc: String)
+  +onActionUndone(desc: String)
+  +getObserverName(): String
+}
+
+DrawingController ..|> ActionObserver
+DrawingController --> ActionObservable : s'enregistre
+ActionObservable --> ActionObserver : notifie
+
+legend bottom
+Ce diagramme represente le pattern Observer: les actions du systeme
+sont publiees et le controleur recoit les notifications pour historique/log.
+endlegend
+@enduml

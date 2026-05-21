@@ -1,0 +1,41 @@
+﻿@startuml
+allowmixing
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+class DrawingController {
+  -drawingDAO: DrawingDAO
+}
+
+interface ActionLogRepository {
+  +saveLog(action: String, timestamp: String): boolean
+}
+
+class DrawingDAO {
+  -dbUrl: String
+  -dbUser: String
+  -dbPassword: String
+  +saveDrawing(name: String, data: String): int
+  +getDrawing(id: int): String
+  +saveLog(action: String, timestamp: String): boolean
+  -openConnection(): Connection
+}
+
+class DatabaseLogStrategy {
+  -dao: ActionLogRepository
+  +log(message: String)
+}
+
+database "SGBD relationnel\n(MySQL via JDBC)" as DB
+
+DrawingDAO ..|> ActionLogRepository
+DrawingController --> DrawingDAO : utilise (persistence)
+DatabaseLogStrategy --> ActionLogRepository : depend de l'abstraction
+DrawingDAO --> DB : JDBC
+
+legend bottom
+Ce diagramme montre le pattern DAO: DrawingDAO encapsule l'acces base de donnees
+et isole la logique metier des details de persistence JDBC.
+endlegend
+@enduml
+

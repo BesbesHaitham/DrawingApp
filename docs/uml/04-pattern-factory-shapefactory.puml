@@ -1,0 +1,72 @@
+﻿@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+class DrawingController {
+  -activeTool: String
+  -selectedColor: Color
+  -strokeWidth: double
+}
+
+class ShapeFactory {
+  +RECTANGLE: String
+  +CIRCLE: String
+  +LINE: String
+  +TRIANGLE: String
+  +DIAMOND: String
+  +PENTAGON: String
+  +HEXAGON: String
+  +STAR: String
+  +createShape(type, x1, y1, x2, y2, color): ShapeModel
+}
+
+abstract class ShapeModel {
+  -startX: double
+  -startY: double
+  -endX: double
+  -endY: double
+  -color: Color
+  +createShape(): Shape
+}
+
+class RectangleShape {
+  +createShape(): Shape
+}
+class CircleShape {
+  +createShape(): Shape
+}
+class LineShape {
+  +createShape(): Shape
+}
+class TriangleShape {
+  +createShape(): Shape
+}
+class DiamondShape {
+  +createShape(): Shape
+}
+class PentagonShape {
+  +createShape(): Shape
+}
+class HexagonShape {
+  +createShape(): Shape
+}
+class StarShape {
+  +createShape(): Shape
+}
+
+DrawingController --> ShapeFactory : utilise
+ShapeFactory ..> ShapeModel : fabrique
+ShapeModel <|-- RectangleShape
+ShapeModel <|-- CircleShape
+ShapeModel <|-- LineShape
+ShapeModel <|-- TriangleShape
+ShapeModel <|-- DiamondShape
+ShapeModel <|-- PentagonShape
+ShapeModel <|-- HexagonShape
+ShapeModel <|-- StarShape
+
+legend bottom
+Ce diagramme represente le pattern Factory: le controleur delegue la creation
+concrete des formes a ShapeFactory pour reduire le couplage.
+endlegend
+@enduml

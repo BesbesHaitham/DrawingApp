@@ -1,0 +1,80 @@
+﻿@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+class DrawingController {
+  -undoManager: UndoManager
+  -selectedShape: Shape
+  -graphModel: GraphModel
+  -undo()
+  -redo()
+}
+
+class UndoManager {
+  -commandHistory: Deque<Command>
+  -redoHistory: Deque<Command>
+  +executeCommand(c: Command)
+  +undo(): Command
+  +redo(): Command
+  +canUndo(): boolean
+  +canRedo(): boolean
+}
+
+interface Command {
+  +execute()
+  +undo()
+  +getDescription(): String
+}
+
+class DrawCommand {
+  -shapeModel: ShapeModel
+  +execute()
+  +undo()
+}
+class DeleteCommand {
+  -shape: Shape
+  +execute()
+  +undo()
+}
+class ClearCanvasCommand {
+  -onExecute: Runnable
+  -onUndo: Runnable
+  +execute()
+  +undo()
+}
+class AddGraphNodeCommand {
+  -node: GraphNodeItem
+  +execute()
+  +undo()
+}
+class AddGraphEdgeCommand {
+  -edge: GraphEdgeItem
+  +execute()
+  +undo()
+}
+class DeleteGraphNodeCommand {
+  -node: GraphNodeItem
+  +execute()
+  +undo()
+}
+class DeleteGraphEdgeCommand {
+  -edge: GraphEdgeItem
+  +execute()
+  +undo()
+}
+
+DrawingController --> UndoManager : invoke
+UndoManager --> Command : stocke/execute
+Command <|.. DrawCommand
+Command <|.. DeleteCommand
+Command <|.. ClearCanvasCommand
+Command <|.. AddGraphNodeCommand
+Command <|.. AddGraphEdgeCommand
+Command <|.. DeleteGraphNodeCommand
+Command <|.. DeleteGraphEdgeCommand
+
+legend bottom
+Ce diagramme montre le pattern Command pour encapsuler chaque action,
+permettre Undo/Redo et conserver un historique d'operations.
+endlegend
+@enduml

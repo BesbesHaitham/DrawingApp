@@ -1,0 +1,72 @@
+﻿@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+class DrawingController {
+  -graphPathService: GraphPathService
+  -computeShortestPath()
+}
+
+class GraphPathService {
+  -algorithmRegistry: ShortestPathAlgorithmRegistry
+  +computeShortestPath(...): GraphPathComputation
+}
+
+class GraphPathComputation {
+  -result: ShortestPathResult
+  -highlightedEdges: List<GraphEdgeItem>
+}
+
+class GraphModel {
+  -nodes: List<GraphNodeItem>
+  -edges: List<GraphEdgeItem>
+}
+
+interface ShortestPathAlgorithm {
+  +getName(): String
+  +compute(...): ShortestPathResult
+}
+
+interface ShortestPathAlgorithmRegistry {
+  +findByName(name: String): ShortestPathAlgorithm
+  +availableNames(): Set<String>
+}
+
+class DefaultShortestPathAlgorithmRegistry {
+  -algorithms: Map<String, ShortestPathAlgorithm>
+  +findByName(name: String): ShortestPathAlgorithm
+}
+
+class DijkstraShortestPathAlgorithm {
+  +getName(): String
+  +compute(...): ShortestPathResult
+}
+
+class BellmanFordShortestPathAlgorithm {
+  +getName(): String
+  +compute(...): ShortestPathResult
+}
+
+class ShortestPathResult {
+  -distance: double
+  -pathNodeIds: List<Integer>
+}
+
+DrawingController --> GraphPathService
+GraphPathService --> ShortestPathAlgorithmRegistry
+GraphPathService --> GraphModel
+GraphPathService --> GraphPathComputation
+
+DefaultShortestPathAlgorithmRegistry ..|> ShortestPathAlgorithmRegistry
+DefaultShortestPathAlgorithmRegistry --> DijkstraShortestPathAlgorithm
+DefaultShortestPathAlgorithmRegistry --> BellmanFordShortestPathAlgorithm
+
+ShortestPathAlgorithm <|.. DijkstraShortestPathAlgorithm
+ShortestPathAlgorithm <|.. BellmanFordShortestPathAlgorithm
+ShortestPathAlgorithm --> ShortestPathResult
+
+legend bottom
+Ce diagramme decrit la fonctionnalite de plus court chemin: GraphPathService
+selectionne l'algorithme (Dijkstra ou Bellman-Ford) via un registre extensible.
+endlegend
+@enduml
