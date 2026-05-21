@@ -1,0 +1,124 @@
+﻿@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+package "controller" {
+  class DrawingController {
+    -activeTool: String
+    -undoManager: UndoManager
+    -logStrategy: LogStrategy
+    +initialize()
+    -undo()
+    -redo()
+    -computeShortestPath()
+  }
+}
+
+package "model" {
+  abstract class ShapeModel {
+    -startX: double
+    -startY: double
+    +createShape(): Shape
+    +getStartX(): double
+    +getStartY(): double
+  }
+  class GraphModel {
+    -nodes: List<GraphNodeItem>
+    -edges: List<GraphEdgeItem>
+    +addNode(node)
+    +addEdge(edge)
+    +removeNode(node)
+    +removeEdge(edge)
+  }
+  class GraphNodeItem {
+    -id: int
+    -label: String
+    -centerX: double
+    -centerY: double
+  }
+  class GraphEdgeItem {
+    -weight: double
+    -from: GraphNodeItem
+    -to: GraphNodeItem
+  }
+}
+
+package "services" {
+  class GraphCanvasService {
+    -nodeSequence: int
+    +createGraphNode(...)
+    +createGraphEdge(...)
+    +selectNodeForEdge(...)
+    +clearPendingEdgeSelection()
+  }
+  class GraphPathService {
+    +computeShortestPath(...): GraphPathComputation
+  }
+}
+
+package "patterns" {
+  class ShapeFactory {
+    +createShape(...): ShapeModel
+  }
+  class UndoManager {
+    -commandHistory: Deque<Command>
+    -redoHistory: Deque<Command>
+    +executeCommand(command)
+    +undo(): Command
+    +redo(): Command
+    +canUndo(): boolean
+    +canRedo(): boolean
+  }
+  interface Command {
+    +execute()
+    +undo()
+    +getDescription(): String
+  }
+  interface LogStrategy {
+    +log(action: String)
+    +getStrategyName(): String
+  }
+  class ActionObservable {
+    -observers: List<ActionObserver>
+    +addObserver(observer)
+    +removeObserver(observer)
+    +notifyActionExecuted(description)
+    +notifyActionUndone(description)
+  }
+}
+
+package "data" {
+  interface ActionLogRepository {
+    +saveLog(action: String, timestamp: String): boolean
+  }
+  class DrawingDAO {
+    -dbUrl: String
+    -dbUser: String
+    -dbPassword: String
+    +saveDrawing(name: String, data: String): int
+    +getDrawing(id: int): String
+    +saveLog(action: String, timestamp: String): boolean
+  }
+}
+
+DrawingController --> ShapeFactory
+DrawingController --> UndoManager
+DrawingController --> GraphCanvasService
+DrawingController --> GraphPathService
+DrawingController --> DrawingDAO
+DrawingController --> ActionObservable
+DrawingController --> LogStrategy
+
+ShapeFactory ..> ShapeModel : create
+UndoManager --> Command
+DrawingDAO ..|> ActionLogRepository
+GraphModel "1" o-- "*" GraphNodeItem
+GraphModel "1" o-- "*" GraphEdgeItem
+GraphCanvasService --> GraphModel
+GraphPathService --> GraphModel
+
+legend bottom
+Ce diagramme montre la structure globale simplifiee du projet et les
+relations majeures entre controleur, modele, services, patterns et acces aux donnees.
+endlegend
+@enduml

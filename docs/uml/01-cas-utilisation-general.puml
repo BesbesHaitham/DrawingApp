@@ -1,0 +1,40 @@
+﻿@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam usecase {
+  BackgroundColor #F8F9FA
+  BorderColor #2D3E50
+}
+
+actor "Utilisateur" as User
+
+rectangle "DrawingApp" {
+  usecase "Dessiner des formes" as UC_Draw
+  usecase "Selectionner / supprimer" as UC_SelectDelete
+  usecase "Undo / Redo" as UC_UndoRedo
+  usecase "Gerer graphe\n(noeuds/aretes)" as UC_Graph
+  usecase "Calculer plus court chemin" as UC_Shortest
+  usecase "Sauvegarder / charger" as UC_SaveLoad
+  usecase "Configurer journalisation" as UC_Log
+  usecase "Consulter historique" as UC_History
+}
+
+User --> UC_Draw
+User --> UC_SelectDelete
+User --> UC_UndoRedo
+User --> UC_Graph
+User --> UC_Shortest
+User --> UC_SaveLoad
+User --> UC_Log
+User --> UC_History
+
+UC_Shortest ..> UC_Graph : <<include>>
+UC_UndoRedo ..> UC_Draw : <<extend>>
+UC_UndoRedo ..> UC_Graph : <<extend>>
+
+legend bottom
+Ce diagramme presente les fonctionnalites metier principales offertes
+par l'application du point de vue de l'utilisateur final.
+endlegend
+@enduml
