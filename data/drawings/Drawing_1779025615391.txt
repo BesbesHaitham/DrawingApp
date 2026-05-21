@@ -1,0 +1,56 @@
+[14:46:54] ACTION: Changement de strategie de log: Fichier
+[14:46:39] ACTION: Suppression d'une forme
+[14:46:35] ACTION: Suppression d'une forme
+[14:46:22] UNDO: Dessin d'un Cercle
+[14:46:22] UNDO: Dessin d'un Ligne
+[14:46:21] UNDO: Dessin d'un Ligne
+[14:46:21] UNDO: Effacement complet du canevas
+[14:46:20] UNDO: Dessin d'un Ligne
+[14:46:19] ACTION: Dessin d'un Ligne
+[14:46:16] ACTION: Effacement complet du canevas
+[14:46:16] ACTION: Redo de Dessin d'un Ligne
+[14:46:15] ACTION: Redo de Dessin d'un Ligne
+[14:46:15] ACTION: Redo de Dessin d'un Cercle
+[14:46:15] ACTION: Redo de Dessin d'un Cercle
+[14:46:15] ACTION: Redo de Dessin d'un Cercle
+[14:46:14] ACTION: Redo de Dessin d'un Cercle
+[14:46:14] ACTION: Redo de Dessin d'un Cercle
+[14:46:14] ACTION: Redo de Dessin d'un Cercle
+[14:46:14] ACTION: Redo de Dessin d'un Rectangle
+[14:46:13] ACTION: Redo de Dessin d'un Rectangle
+[14:46:12] UNDO: Dessin d'un Rectangle
+[14:46:12] UNDO: Dessin d'un Rectangle
+[14:46:12] UNDO: Dessin d'un Cercle
+[14:46:12] UNDO: Dessin d'un Cercle
+[14:46:12] UNDO: Dessin d'un Cercle
+[14:46:11] UNDO: Dessin d'un Cercle
+[14:46:11] UNDO: Dessin d'un Cercle
+[14:46:11] UNDO: Dessin d'un Cercle
+[14:46:11] UNDO: Dessin d'un Ligne
+[14:46:11] UNDO: Dessin d'un Ligne
+[14:46:10] UNDO: Dessin d'un Ligne
+[14:46:10] UNDO: Dessin d'un Ligne
+[14:46:10] UNDO: Dessin d'un Ligne
+[14:46:09] UNDO: Dessin d'un Ligne
+[14:46:09] UNDO: Dessin d'un Ligne
+[14:46:07] ACTION: Dessin d'un Ligne
+[14:46:06] ACTION: Dessin d'un Ligne
+[14:46:03] ACTION: Dessin d'un Ligne
+[14:46:02] ACTION: Dessin d'un Ligne
+[14:46:02] ACTION: Dessin d'un Ligne
+[14:46:01] ACTION: Dessin d'un Ligne
+[14:46:00] ACTION: Dessin d'un Ligne
+[14:45:58] ACTION: Dessin d'un Cercle
+[14:45:57] ACTION: Dessin d'un Cercle
+[14:45:56] ACTION: Dessin d'un Cercle
+[14:45:55] ACTION: Dessin d'un Cercle
+[14:45:55] ACTION: Dessin d'un Cercle
+[14:45:54] ACTION: Dessin d'un Cercle
+[14:45:52] ACTION: Dessin d'un Rectangle
+[14:45:51] ACTION: Dessin d'un Rectangle
+[14:45:50] ACTION: Dessin d'un Rectangle
+[14:45:49] ACTION: Dessin d'un Rectangle
+[14:45:48] ACTION: Dessin d'un Rectangle
+[14:45:48] ACTION: Dessin d'un Rectangle
+[14:45:47] ACTION: Dessin d'un Rectangle
+[14:45:45] ACTION: Dessin d'un Rectangle

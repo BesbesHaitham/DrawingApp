@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.TilePane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane fx:id="root"
+            xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.drawingapp.controller.DrawingController"
+            styleClass="root-layout">
+    <top>
+        <HBox fx:id="headerBar" alignment="CENTER_LEFT" spacing="18" styleClass="surface-card header-bar">
+            <VBox spacing="4">
+                <Label text="Drawing Studio" styleClass="app-title"/>
+                <Label text="Dessinez rapidement avec une interface plus claire et un vrai historique." styleClass="app-subtitle"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <HBox spacing="10" styleClass="header-actions">
+                <Button fx:id="quickOpenBtn" text="Ouvrir un fichier" styleClass="secondary-button header-action-button"/>
+            </HBox>
+            <Label fx:id="activeToolBadge" text="Mode selection" styleClass="tool-badge"/>
+            <HBox spacing="8" styleClass="window-controls">
+                <Button fx:id="minimizeBtn" text="-" styleClass="window-control-button"/>
+                <Button fx:id="maximizeBtn" text="[ ]" styleClass="window-control-button"/>
+                <Button fx:id="closeBtn" text="X" styleClass="close-window-button"/>
+            </HBox>
+        </HBox>
+    </top>
+
+    <left>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="panel-scroll">
+            <content>
+                <VBox prefWidth="336" minWidth="336" spacing="18" styleClass="surface-card side-panel">
+                    <VBox spacing="12" styleClass="section-card">
+                        <Label text="Outils de dessin" styleClass="section-title"/>
+                        <Label text="Choisissez un mode puis dessinez directement dans le canevas." styleClass="section-caption"/>
+                        <Button fx:id="selectBtn" text="Selection" maxWidth="Infinity" styleClass="tool-button"/>
+                        <Label text="Formes geometriques" styleClass="field-label"/>
+                        <TilePane prefColumns="2" hgap="10" vgap="10" styleClass="shape-grid">
+                            <Button fx:id="rectangleBtn" text="Rectangle" styleClass="tool-button compact-tool-button"/>
+                            <Button fx:id="circleBtn" text="Cercle" styleClass="tool-button compact-tool-button"/>
+                            <Button fx:id="lineBtn" text="Ligne" styleClass="tool-button compact-tool-button"/>
+                            <Button fx:id="triangleBtn" text="Triangle" styleClass="tool-button compact-tool-button"/>
+                            <Button fx:id="diamondBtn" text="Losange" styleClass="tool-button compact-tool-button"/>
+                            <Button fx:id="pentagonBtn" text="Pentagone" styleClass="tool-button compact-tool-button"/>
+                            <Button fx:id="hexagonBtn" text="Hexagone" styleClass="tool-button compact-tool-button"/>
+                            <Button fx:id="starBtn" text="Etoile" styleClass="tool-button compact-tool-button"/>
+                        </TilePane>
+                    </VBox>
+
+                    <VBox spacing="12" styleClass="section-card">
+                        <Label text="Couleurs" styleClass="section-title"/>
+                        <Label text="Appliquez une couleur aux formes geometriques et aux nouveaux elements du graphe." styleClass="section-caption"/>
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Pane fx:id="activeColorPreview" prefHeight="22" prefWidth="22" styleClass="active-color-preview"/>
+                            <Label fx:id="activeColorValueLabel" text="Couleur active #2D7FF9" styleClass="field-label"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <ColorPicker fx:id="customColorPicker" styleClass="custom-color-picker"/>
+                        </HBox>
+                        <TilePane prefColumns="4" hgap="10" vgap="10" styleClass="color-grid">
+                            <Button fx:id="colorBlueBtn" styleClass="color-swatch"/>
+                            <Button fx:id="colorTealBtn" styleClass="color-swatch"/>
+                            <Button fx:id="colorGreenBtn" styleClass="color-swatch"/>
+                            <Button fx:id="colorYellowBtn" styleClass="color-swatch"/>
+                            <Button fx:id="colorOrangeBtn" styleClass="color-swatch"/>
+                            <Button fx:id="colorRedBtn" styleClass="color-swatch"/>
+                            <Button fx:id="colorPurpleBtn" styleClass="color-swatch"/>
+                            <Button fx:id="colorGrayBtn" styleClass="color-swatch"/>
+                        </TilePane>
+                    </VBox>
+
+                    <VBox spacing="12" styleClass="section-card">
+                        <Label text="Construction du graphe" styleClass="section-title"/>
+                        <Label text="Ajoutez des noeuds puis reliez-les avec des aretes ponderees." styleClass="section-caption"/>
+                        <Button fx:id="graphNodeBtn" text="Ajouter un noeud" maxWidth="Infinity" styleClass="tool-button"/>
+                        <Button fx:id="graphEdgeBtn" text="Ajouter une arete" maxWidth="Infinity" styleClass="tool-button"/>
+                        <Label fx:id="graphSummaryLabel" text="0 noeuds | 0 aretes" styleClass="info-chip"/>
+                    </VBox>
+
+                    <VBox spacing="12" styleClass="section-card">
+                        <Label text="Plus court chemin" styleClass="section-title"/>
+                        <Label text="Choisissez deux noeuds et un algorithme pour lancer le calcul." styleClass="section-caption"/>
+                        <Label text="Depart" styleClass="field-label"/>
+                        <ComboBox fx:id="startNodeCombo" maxWidth="Infinity" styleClass="combo-box-modern"/>
+                        <Label text="Arrivee" styleClass="field-label"/>
+                        <ComboBox fx:id="endNodeCombo" maxWidth="Infinity" styleClass="combo-box-modern"/>
+                        <Label text="Algorithme" styleClass="field-label"/>
+                        <ComboBox fx:id="algorithmCombo" maxWidth="Infinity" styleClass="combo-box-modern"/>
+                        <Button fx:id="computePathBtn" text="Calculer le chemin" maxWidth="Infinity" styleClass="primary-button"/>
+                        <Button fx:id="clearPathBtn" text="Effacer la mise en evidence" maxWidth="Infinity" styleClass="secondary-button"/>
+                        <Label fx:id="pathResultLabel" text="Selectionnez deux noeuds puis choisissez un algorithme pour calculer le plus court chemin." wrapText="true" styleClass="result-card"/>
+                    </VBox>
+
+                    <VBox spacing="12" styleClass="section-card">
+                        <Label text="Actions" styleClass="section-title"/>
+                        <Label text="Corrigez rapidement votre dessin sans quitter votre zone de travail." styleClass="section-caption"/>
+                        <HBox spacing="10">
+                            <Button fx:id="undoBtn" text="Annuler" maxWidth="Infinity" styleClass="action-button action-button-compact" HBox.hgrow="ALWAYS"/>
+                            <Button fx:id="clearBtn" text="Effacer" maxWidth="Infinity" styleClass="action-button action-button-compact" HBox.hgrow="ALWAYS"/>
+                            <Button fx:id="redoBtn" text="Retablir" maxWidth="Infinity" styleClass="action-button action-button-compact" HBox.hgrow="ALWAYS"/>
+                        </HBox>
+                        <Button fx:id="deleteBtn" text="Supprimer la selection" maxWidth="Infinity" styleClass="danger-button"/>
+                    </VBox>
+
+                    <VBox spacing="12" styleClass="section-card">
+                        <Label text="Journalisation" styleClass="section-title"/>
+                        <Label text="Selectionnez ou stocker les evenements de la session." styleClass="section-caption"/>
+                        <ComboBox fx:id="logStrategyCombo" maxWidth="Infinity" prefWidth="220" styleClass="combo-box-modern"/>
+                    </VBox>
+
+                    <VBox spacing="12" styleClass="section-card">
+                        <Label text="Fichiers" styleClass="section-title"/>
+                        <Label text="Enregistrez puis rouvrez vos dessins complets au format .drawing." styleClass="section-caption"/>
+                        <Button fx:id="saveBtn" text="Sauvegarder" maxWidth="Infinity" styleClass="primary-button"/>
+                        <Button fx:id="openBtn" text="Ouvrir un fichier .drawing" maxWidth="Infinity" styleClass="secondary-button"/>
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </left>
+
+    <center>
+        <VBox spacing="12" styleClass="surface-card canvas-panel">
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="Canevas" styleClass="section-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="Zone de travail" styleClass="canvas-chip"/>
+            </HBox>
+            <Label text="Cliquez pour poser une forme ou glissez pour definir sa taille avec precision." styleClass="section-caption"/>
+            <StackPane VBox.vgrow="ALWAYS" styleClass="canvas-frame">
+                <Pane fx:id="drawingCanvas" styleClass="canvas-surface"/>
+                <VBox fx:id="emptyStateBox" alignment="CENTER" mouseTransparent="true" spacing="8" styleClass="empty-state-card">
+                    <Label text="Choisissez un outil" styleClass="empty-title"/>
+                    <Label text="Cliquez ou glissez dans le canevas pour dessiner." styleClass="empty-subtitle"/>
+                </VBox>
+            </StackPane>
+        </VBox>
+    </center>
+
+    <right>
+        <VBox prefWidth="320" spacing="12" styleClass="surface-card history-panel">
+            <Label text="Historique" styleClass="section-title"/>
+            <Label text="La derniere action apparait en haut pour suivre chaque etape." styleClass="section-caption"/>
+            <ListView fx:id="historyListView" VBox.vgrow="ALWAYS" styleClass="history-list"/>
+        </VBox>
+    </right>
+
+    <bottom>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="surface-card status-bar">
+            <Label text="Statut" styleClass="status-title"/>
+            <Label fx:id="statusLabel" text="Pret." styleClass="status-text"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label text="Interface JavaFX" styleClass="status-pill"/>
+        </HBox>
+    </bottom>
+
+    <padding>
+        <Insets top="18" right="18" bottom="18" left="18"/>
+    </padding>
+</BorderPane>

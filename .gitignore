@@ -1,0 +1,35 @@
+# Maven
+target/
+*.jar
+*.war
+*.ear
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+
+# IDE
+.idea/
+.eclipse/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+*.iws
+*.ipr
+
+# Build
+out/
+build/
+dist/
+
+# Database
+data/drawings.db
+
+# Logs
+*.log
+data/logs/
+
+# OS
+Thumbs.db
+.DS_Store

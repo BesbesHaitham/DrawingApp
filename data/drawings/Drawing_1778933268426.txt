@@ -1,0 +1,16 @@
+[13:07:47] ACTION: Changement de strategie de log: Fichier
+[13:07:41] ACTION: Dessin d'un Cercle
+[13:07:39] ACTION: Dessin d'un Ligne
+[13:07:38] ACTION: Dessin d'un Ligne
+[13:07:37] ACTION: Dessin d'un Ligne
+[13:07:35] UNDO: Dessin d'un Cercle
+[13:07:34] UNDO: Dessin d'un Cercle
+[13:07:33] ACTION: Dessin d'un Cercle
+[13:07:32] ACTION: Dessin d'un Cercle
+[13:07:30] ACTION: Dessin d'un Cercle
+[13:07:27] ACTION: Suppression d'une forme
+[13:07:23] ACTION: Dessin d'un Ligne
+[13:07:21] ACTION: Dessin d'un Rectangle
+[13:07:20] ACTION: Dessin d'un Rectangle
+[13:07:20] ACTION: Dessin d'un Rectangle
+[13:07:19] ACTION: Dessin d'un Rectangle
