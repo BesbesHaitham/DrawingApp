@@ -240,7 +240,7 @@
     </center>
 
     <right>
-        <VBox prefWidth="250" minWidth="220" spacing="0" styleClass="right-sidebar">
+        <VBox prefWidth="280" minWidth="250" spacing="0" styleClass="right-sidebar">
             <TabPane styleClass="right-tabs" tabClosingPolicy="UNAVAILABLE">
                 <tabs>
                     <Tab text="Graph">

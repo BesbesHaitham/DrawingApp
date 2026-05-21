@@ -33,7 +33,6 @@ import com.drawingapp.strategy.DefaultLogStrategyFactory;
 import com.drawingapp.strategy.LogStrategy;
 import com.drawingapp.strategy.LogStrategyFactory;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -72,6 +71,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Polygon;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -81,6 +82,8 @@ import javafx.stage.Stage;
 public class DrawingController implements ActionObserver {
     private static final int DEFAULT_SHAPE_COLOR = 0x2D7FF9;
     private static final double MIN_DRAG_DISTANCE = 6.0;
+    private static final long PREVIEW_REFRESH_INTERVAL_NS = 10_000_000L;
+    private static final long MOUSE_STATUS_REFRESH_INTERVAL_NS = 16_000_000L;
     private static final double DEFAULT_RECT_WIDTH = 120.0;
     private static final double DEFAULT_RECT_HEIGHT = 80.0;
     private static final double DEFAULT_CIRCLE_SIZE = 96.0;
@@ -248,6 +251,10 @@ public class DrawingController implements ActionObserver {
     private int currentShapeColorRgb;
     private Button activeColorSwatchButton;
     private Path lastDrawingDirectory;
+    private long lastPreviewRefreshTimeNs;
+    private long lastMouseStatusRefreshTimeNs;
+    private double lastPreviewX = Double.NaN;
+    private double lastPreviewY = Double.NaN;
 
     public DrawingController() {
         this(
@@ -440,6 +447,11 @@ public class DrawingController implements ActionObserver {
     }
 
     private void onCanvasMouseMoved(MouseEvent event) {
+        long now = System.nanoTime();
+        if ((now - lastMouseStatusRefreshTimeNs) < MOUSE_STATUS_REFRESH_INTERVAL_NS) {
+            return;
+        }
+        lastMouseStatusRefreshTimeNs = now;
         updateMouseCoordinates(event.getX(), event.getY());
     }
 
@@ -457,6 +469,9 @@ public class DrawingController implements ActionObserver {
     private void startDrawing(double canvasX, double canvasY) {
         startX = clampX(canvasX);
         startY = clampY(canvasY);
+        lastPreviewX = Double.NaN;
+        lastPreviewY = Double.NaN;
+        lastPreviewRefreshTimeNs = 0L;
         drawingGestureActive = true;
         removePreview();
     }
@@ -464,24 +479,153 @@ public class DrawingController implements ActionObserver {
     private void updateDrawing(double canvasX, double canvasY) {
         double currentX = clampX(canvasX);
         double currentY = clampY(canvasY);
+        long now = System.nanoTime();
 
-        removePreview();
+        if (!Double.isNaN(lastPreviewX) && !Double.isNaN(lastPreviewY)) {
+            boolean movementTooSmall = Math.abs(currentX - lastPreviewX) < 1.2
+                    && Math.abs(currentY - lastPreviewY) < 1.2;
+            boolean tooSoon = (now - lastPreviewRefreshTimeNs) < PREVIEW_REFRESH_INTERVAL_NS;
+            if (movementTooSmall || tooSoon) {
+                return;
+            }
+        }
 
-        ShapeModel previewModel = ShapeFactory.createShape(
-                activeTool,
-                startX,
-                startY,
-                currentX,
-                currentY,
-                currentShapeColorRgb
-        );
+        if (previewShape == null) {
+            ShapeModel previewModel = ShapeFactory.createShape(
+                    activeTool,
+                    startX,
+                    startY,
+                    currentX,
+                    currentY,
+                    currentShapeColorRgb
+            );
+            previewShape = previewModel.createShape();
+            previewShape.setMouseTransparent(true);
+            previewShape.setOpacity(0.45);
+            previewShape.getStrokeDashArray().setAll(10.0, 6.0);
+            drawingCanvas.getChildren().add(previewShape);
+        } else if (!updatePreviewShapeGeometry(currentX, currentY)) {
+            drawingCanvas.getChildren().remove(previewShape);
+            ShapeModel previewModel = ShapeFactory.createShape(
+                    activeTool,
+                    startX,
+                    startY,
+                    currentX,
+                    currentY,
+                    currentShapeColorRgb
+            );
+            previewShape = previewModel.createShape();
+            previewShape.setMouseTransparent(true);
+            previewShape.setOpacity(0.45);
+            previewShape.getStrokeDashArray().setAll(10.0, 6.0);
+            drawingCanvas.getChildren().add(previewShape);
+        }
 
-        previewShape = previewModel.createShape();
-        previewShape.setMouseTransparent(true);
-        previewShape.setOpacity(0.45);
-        previewShape.getStrokeDashArray().setAll(10.0, 6.0);
-        drawingCanvas.getChildren().add(previewShape);
+        lastPreviewX = currentX;
+        lastPreviewY = currentY;
+        lastPreviewRefreshTimeNs = now;
         updateEmptyState();
+    }
+
+    private boolean updatePreviewShapeGeometry(double currentX, double currentY) {
+        double minX = Math.min(startX, currentX);
+        double minY = Math.min(startY, currentY);
+        double width = Math.abs(currentX - startX);
+        double height = Math.abs(currentY - startY);
+        double centerX = (startX + currentX) / 2.0;
+        double centerY = (startY + currentY) / 2.0;
+
+        if (ShapeFactory.RECTANGLE.equals(activeTool) && previewShape instanceof Rectangle rectangle) {
+            rectangle.setX(minX);
+            rectangle.setY(minY);
+            rectangle.setWidth(width);
+            rectangle.setHeight(height);
+            return true;
+        }
+
+        if (ShapeFactory.CIRCLE.equals(activeTool) && previewShape instanceof Circle circle) {
+            double radius = Math.hypot(currentX - startX, currentY - startY) / 2.0;
+            circle.setCenterX(centerX);
+            circle.setCenterY(centerY);
+            circle.setRadius(radius);
+            return true;
+        }
+
+        if (ShapeFactory.LINE.equals(activeTool) && previewShape instanceof Line line) {
+            line.setStartX(startX);
+            line.setStartY(startY);
+            line.setEndX(currentX);
+            line.setEndY(currentY);
+            return true;
+        }
+
+        if (previewShape instanceof Polygon polygon) {
+            if (ShapeFactory.TRIANGLE.equals(activeTool)) {
+                polygon.getPoints().setAll(
+                        centerX, minY,
+                        minX + width, minY + height,
+                        minX, minY + height
+                );
+                return true;
+            }
+            if (ShapeFactory.DIAMOND.equals(activeTool)) {
+                polygon.getPoints().setAll(
+                        centerX, minY,
+                        minX + width, centerY,
+                        centerX, minY + height,
+                        minX, centerY
+                );
+                return true;
+            }
+            if (ShapeFactory.PENTAGON.equals(activeTool)) {
+                setRegularPolygonPoints(polygon, 5, -90.0, centerX, centerY, width / 2.0, height / 2.0);
+                return true;
+            }
+            if (ShapeFactory.HEXAGON.equals(activeTool)) {
+                setRegularPolygonPoints(polygon, 6, -30.0, centerX, centerY, width / 2.0, height / 2.0);
+                return true;
+            }
+            if (ShapeFactory.STAR.equals(activeTool)) {
+                setStarPoints(polygon, centerX, centerY, width / 2.0, height / 2.0);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void setRegularPolygonPoints(
+            Polygon polygon,
+            int sides,
+            double rotationDegrees,
+            double centerX,
+            double centerY,
+            double radiusX,
+            double radiusY
+    ) {
+        polygon.getPoints().clear();
+        for (int index = 0; index < sides; index++) {
+            double angle = Math.toRadians(rotationDegrees + (360.0 / sides * index));
+            polygon.getPoints().addAll(
+                    centerX + radiusX * Math.cos(angle),
+                    centerY + radiusY * Math.sin(angle)
+            );
+        }
+    }
+
+    private void setStarPoints(Polygon polygon, double centerX, double centerY, double outerRadiusX, double outerRadiusY) {
+        double innerRadiusX = outerRadiusX * 0.45;
+        double innerRadiusY = outerRadiusY * 0.45;
+        polygon.getPoints().clear();
+        for (int index = 0; index < 10; index++) {
+            double angle = Math.toRadians(-90 + (36.0 * index));
+            double radiusX = index % 2 == 0 ? outerRadiusX : innerRadiusX;
+            double radiusY = index % 2 == 0 ? outerRadiusY : innerRadiusY;
+            polygon.getPoints().addAll(
+                    centerX + radiusX * Math.cos(angle),
+                    centerY + radiusY * Math.sin(angle)
+            );
+        }
     }
 
     private void finishDrawing(double canvasX, double canvasY) {
@@ -533,6 +677,11 @@ public class DrawingController implements ActionObserver {
             updateStatus("Espace insuffisant. Placez le noeud un peu plus loin.");
             return;
         }
+
+        // Ensure nodes created from the graph tool are clickable for edge creation/selection.
+        attachGraphNodeInteractions(node);
+        graphCanvasService.applyGraphNodeVisual(node, false);
+
         AddGraphNodeCommand command = new AddGraphNodeCommand(drawingCanvas, graphModel, node);
         undoManager.executeCommand(command);
 
@@ -600,6 +749,8 @@ public class DrawingController implements ActionObserver {
         }
 
         GraphEdgeItem edge = outcome.createdEdge();
+        attachGraphEdgeInteractions(edge);
+        graphCanvasService.applyGraphEdgeVisual(edge, false);
         AddGraphEdgeCommand command = new AddGraphEdgeCommand(drawingCanvas, graphModel, edge);
         undoManager.executeCommand(command);
 
@@ -1752,7 +1903,7 @@ public class DrawingController implements ActionObserver {
     }
 
     private String formatNumber(double value) {
-        return BigDecimal.valueOf(value).stripTrailingZeros().toPlainString();
+        return String.format("%.1f", value);
     }
 
     private String getDefaultPathMessage() {
